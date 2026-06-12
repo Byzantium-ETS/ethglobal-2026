@@ -130,3 +130,31 @@ Estimated upside if all hit strongly: **~$8.7k–$9.2k** (plus ENS pool variabil
 - Demo video
 - Architecture diagram
 - Clear sponsor mapping in README (Arc + ENS + World)
+
+## Useful Resources
+
+### Arc (Circle)
+- Arc docs: https://docs.arc.io/
+- Circle Gateway nanopayments: https://developers.circle.com/gateway/nanopayments.md
+- x402 foundation repo: https://github.com/x402-foundation/x402
+- Arc faucet: https://faucet.circle.com
+- Arc explorer: https://testnet.arcscan.app
+
+### ENS
+- ENS docs: https://docs.ens.domains/
+- ENS deployments (contract addresses): https://docs.ens.domains/learn/deployments
+- ENS SDK (`ensjs`): https://github.com/ensdomains/ensjs
+- ENS Sepolia app: https://sepolia.app.ens.domains/
+
+### World
+- World docs: https://docs.world.org/
+- AgentKit integration guide: https://docs.world.org/agents/agent-kit/integrate
+- AgentKit SDK reference: https://docs.world.org/agents/agent-kit/sdk-reference
+- AgentBook: https://agentbook.world
+
+### Quick constants
+- Arc testnet chain ID: `5042002`
+- Arc RPC: `https://rpc.testnet.arc.network`
+- Arc USDC: `0x3600000000000000000000000000000000000000`
+- Arc GatewayWallet: `0x0077777d7EBA4688BDeF3E311b846F25870A19B9`
+- World AgentBook: `0xA23aB2712eA7BBa896930544C7d6636a96b944dA`
