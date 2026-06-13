@@ -1,0 +1,20 @@
+{
+  "name": "agentgate",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "demo"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "build": "npm --workspaces run build",
+    "build:packages": "npm --workspace packages/sdk run build || true && npm --workspace packages/server run build || true",
+    "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 || true",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "npm --workspaces run test || true"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.0"
+  }
+}
