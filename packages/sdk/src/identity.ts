@@ -1,6 +1,6 @@
 import { addEnsContracts, createEnsPublicClient, createEnsWalletClient } from '@ensdomains/ensjs';
 import { createSubname } from '@ensdomains/ensjs/wallet';
-import { createPublicClient, http, isAddress, type Account, type Address, type Chain } from 'viem';
+import { createPublicClient, http, isAddress, type Account, type Address, type Chain, type Hash } from 'viem';
 import { holesky, mainnet, sepolia } from 'viem/chains';
 import { config } from './config';
 
@@ -32,6 +32,15 @@ export interface ReadTextRecordOptions {
   rpcUrl?: string;
   /** ENS-enabled viem chain. When omitted, the chain is detected from `rpcUrl`. */
   chain?: Chain;
+}
+
+export interface RegisterSubnameResult {
+  /** Fully qualified ENS subname, for example `my-agent.agentgate.eth`. */
+  name: string;
+  /** Transaction hash for new registrations; `null` when the subname already belonged to `ownerAddress`. */
+  txHash: Hash | null;
+  /** Whether the helper created the subname or returned an already-owned idempotent result. */
+  status: 'created' | 'already-owned';
 }
 
 function normalizeParentName(parentName: string): string {
@@ -80,7 +89,8 @@ async function resolveEnsChain(chain: Chain | undefined, rpcUrl: string): Promis
  * @param ownerAddress - Address that should own the created subname.
  * @param signer - viem account that signs the transaction and controls `parentName`.
  * @param options - Optional ENS RPC, chain, and resolver overrides.
- * @returns The fully qualified ENS subname, for example `my-agent.agentgate.eth`.
+ * @returns The fully qualified ENS subname, transaction hash, and creation status.
+ * If the subname already belongs to `ownerAddress`, no transaction is sent and `txHash` is `null`.
  * @throws When inputs are invalid, the signer does not control the parent, the name is taken, or the transaction reverts.
  */
 export async function registerSubname(
@@ -89,7 +99,7 @@ export async function registerSubname(
   ownerAddress: Address,
   signer: Account,
   options: RegisterSubnameOptions = {},
-): Promise<string> {
+): Promise<RegisterSubnameResult> {
   const normalizedParent = normalizeParentName(parentName);
   const normalizedLabel = normalizeLabel(label);
   const fullSubname = `${normalizedLabel}.${normalizedParent}`;
@@ -127,7 +137,11 @@ export async function registerSubname(
   if (existingOwnership?.owner) {
     const currentOwner = existingOwnership.owner.toLowerCase();
     if (currentOwner === ownerAddress.toLowerCase()) {
-      return fullSubname;
+      return {
+        name: fullSubname,
+        txHash: null,
+        status: 'already-owned',
+      };
     }
     throw new Error(
       `[ENS Identity] Subname "${fullSubname}" already exists and is owned by ${existingOwnership.owner}`,
@@ -147,7 +161,11 @@ export async function registerSubname(
     throw new Error(`[ENS Identity] Subname registration transaction reverted: ${txHash}`);
   }
 
-  return fullSubname;
+  return {
+    name: fullSubname,
+    txHash,
+    status: 'created',
+  };
 }
 
 /**

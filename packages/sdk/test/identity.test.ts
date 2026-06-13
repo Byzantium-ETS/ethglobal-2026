@@ -90,9 +90,13 @@ describe('identity.registerSubname', () => {
   });
 
   it('normalizes inputs and creates a registry subname on the detected ENS chain', async () => {
-    const subname = await registerSubname(' AgentGate.ETH. ', ' My-Agent ', ownerAddress, signer, { rpcUrl });
+    const result = await registerSubname(' AgentGate.ETH. ', ' My-Agent ', ownerAddress, signer, { rpcUrl });
 
-    expect(subname).toBe('my-agent.agentgate.eth');
+    expect(result).toEqual({
+      name: 'my-agent.agentgate.eth',
+      txHash: '0xabc123',
+      status: 'created',
+    });
     expect(mocks.publicClient.getChainId).toHaveBeenCalledTimes(1);
     expect(mocks.addEnsContracts).toHaveBeenCalledWith(expect.objectContaining({ id: sepolia.id }));
     expect(mocks.createEnsWalletClient).toHaveBeenCalledWith(expect.objectContaining({ account: signer }));
@@ -129,9 +133,13 @@ describe('identity.registerSubname', () => {
   it('does not send a transaction when the subname already belongs to the requested owner', async () => {
     setOwnership(ownerAddress);
 
-    const subname = await registerSubname('agentgate.eth', 'my-agent', ownerAddress, signer, { rpcUrl });
+    const result = await registerSubname('agentgate.eth', 'my-agent', ownerAddress, signer, { rpcUrl });
 
-    expect(subname).toBe('my-agent.agentgate.eth');
+    expect(result).toEqual({
+      name: 'my-agent.agentgate.eth',
+      txHash: null,
+      status: 'already-owned',
+    });
     expect(mocks.createSubname).not.toHaveBeenCalled();
     expect(mocks.publicClient.waitForTransactionReceipt).not.toHaveBeenCalled();
   });
