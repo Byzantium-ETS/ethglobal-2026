@@ -105,6 +105,8 @@ A successful AgentGate implementation will meet the following criteria:
 
 To get started with AgentGate, follow these general steps. More detailed instructions will be available in the `demo` directory once the project is further developed.
 
+For hackathon submission rules, AI-use disclosure, demo video requirements, partner-prize preparation, and judging checklists, see [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md).
+
 ### Prerequisites
 
 -   Node.js (LTS recommended)
