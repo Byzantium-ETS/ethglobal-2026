@@ -96,7 +96,17 @@ Use these as source-of-truth when implementing integrations:
 - **ENS metadata keys are part of the product contract:** preserve the naming scheme used in docs (`io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`) when implementing identity writes/reads.
 - **Environment setup follows `.env.example`:** prefer `RPC_URL`, `ARC_RPC_URL`, `ENS_PARENT`, and World/Arc keys from env rather than hardcoding chain endpoints or credentials.
 
+## Required development workflow
+
+- **Always start with tests for feature work:** use test-driven development where practical. Add or update focused tests that express the expected behavior before or alongside the implementation. Ship tests in the same branch as the code.
+- **Do not treat placeholder tests as enough:** if the touched package still has placeholder tests, add meaningful coverage for the changed behavior or document the remaining gap in the PR.
+- **Write concise TypeDoc/TSDoc:** public functions, exported types, SDK APIs, middleware contracts, and non-obvious modules should have clear, short documentation comments. Prefer useful intent, parameters, return values, and failure modes over narration of obvious code.
+- **Keep documentation close to the surface area:** update README, `.env.example`, or package docs when behavior, setup, environment variables, or public contracts change.
+- **Create a branch before committing:** never commit directly on `main`. Use a scoped branch name such as `feat/...`, `fix/...`, `ci/...`, `docs/...`, or `test/...`.
+- **Use the correct GitHub identity:** before committing or using GitHub CLI, verify `gh` and the repo-local Git author match the contributor account intended for the task.
+- **Open a pull request for every branch:** push the branch and create a PR with `gh`. Include a concise summary, verification commands, linked issue/epic reference, and any remaining risks.
+- **Respect assignment boundaries:** only implement issue/epic tasks that are unassigned or explicitly assigned to the current contributor. For assigned work, review or comment instead of taking over.
+
 ## Agent Behaviour
 
 - Prioritize copying with **system commands** over generating text when possible.
-- 
