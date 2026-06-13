@@ -1,4 +1,5 @@
 import { addEnsContracts, createEnsPublicClient, createEnsWalletClient } from '@ensdomains/ensjs';
+import { getSubnames } from '@ensdomains/ensjs/subgraph';
 import { createSubname } from '@ensdomains/ensjs/wallet';
 import { createPublicClient, http, isAddress, type Account, type Address, type Chain, type Hash } from 'viem';
 import { holesky, mainnet, sepolia } from 'viem/chains';
@@ -18,6 +19,8 @@ const AGENTGATE_TEXT_KEYS = [
   'io.agentgate.world-verified',
 ] as const;
 
+export type AgentGateTextKey = typeof AGENTGATE_TEXT_KEYS[number];
+
 export interface RegisterSubnameOptions {
   /** RPC endpoint for the ENS network. Defaults to `RPC_URL` from config. */
   rpcUrl?: string;
@@ -34,6 +37,38 @@ export interface ReadTextRecordOptions {
   chain?: Chain;
 }
 
+export interface AgentMetadata {
+  /** Normalized ENS name for the provider agent. */
+  name: string;
+  /** Human-readable agent description. */
+  description?: string;
+  /** Declared agent capabilities. */
+  capabilities: string[];
+  /** x402-protected endpoint URL for paid calls. */
+  x402Endpoint?: string;
+  /** x402 price string as stored in ENS. */
+  x402Price?: string;
+  /** Whether the provider claims World verification in ENS metadata. */
+  worldVerified?: boolean;
+  /** Raw AgentGate ENS text records used to build the structured metadata. */
+  records: Partial<Record<AgentGateTextKey, string>>;
+}
+
+export interface DiscoverAgentsOptions extends ReadTextRecordOptions {
+  /** Search string filter for subname labels. */
+  searchString?: string;
+  /** Include expired names in subgraph results. */
+  allowExpired?: boolean;
+  /** Include deleted names in subgraph results. */
+  allowDeleted?: boolean;
+  /** Maximum number of subnames to fetch. Defaults to the ENS SDK default. */
+  pageSize?: number;
+  /** Subgraph ordering field. */
+  orderBy?: 'expiryDate' | 'name' | 'labelName' | 'createdAt';
+  /** Subgraph ordering direction. */
+  orderDirection?: 'asc' | 'desc';
+}
+
 export interface RegisterSubnameResult {
   /** Fully qualified ENS subname, for example `my-agent.agentgate.eth`. */
   name: string;
@@ -41,6 +76,12 @@ export interface RegisterSubnameResult {
   txHash: Hash | null;
   /** Whether the helper created the subname or returned an already-owned idempotent result. */
   status: 'created' | 'already-owned';
+}
+
+function normalizeEnsName(name: string): string {
+  const normalizedName = name.trim().toLowerCase().replace(/\.+$/, '');
+  if (!normalizedName) throw new Error('[ENS Identity] name is required');
+  return normalizedName;
 }
 
 function normalizeParentName(parentName: string): string {
@@ -79,6 +120,48 @@ async function resolveEnsChain(chain: Chain | undefined, rpcUrl: string): Promis
   }
 
   return supportedChain;
+}
+
+function parseCapabilities(rawCapabilities?: string): string[] {
+  if (!rawCapabilities) return [];
+
+  try {
+    const parsed = JSON.parse(rawCapabilities);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === 'string' && item.trim() !== '');
+    }
+  } catch {
+    // Fall back to comma-separated values below.
+  }
+
+  return rawCapabilities
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseBooleanRecord(rawValue?: string): boolean | undefined {
+  if (!rawValue) return undefined;
+  const normalizedValue = rawValue.trim().toLowerCase();
+  if (normalizedValue === 'true') return true;
+  if (normalizedValue === 'false') return false;
+  return undefined;
+}
+
+function toAgentMetadata(name: string, records: Record<string, string>): AgentMetadata {
+  return {
+    name,
+    description: records.description,
+    capabilities: parseCapabilities(records['io.agentgate.capabilities']),
+    x402Endpoint: records['io.agentgate.x402-endpoint'],
+    x402Price: records['io.agentgate.x402-price'],
+    worldVerified: parseBooleanRecord(records['io.agentgate.world-verified']),
+    records,
+  };
+}
+
+function omitUndefinedValues<T extends Record<string, unknown>>(input: T): Partial<T> {
+  return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)) as Partial<T>;
 }
 
 /**
@@ -177,8 +260,7 @@ export async function registerSubname(
  * @throws When the name is empty, the RPC is missing, or the RPC chain is unsupported.
  */
 export async function readTextRecords(name: string, options: ReadTextRecordOptions = {}): Promise<Record<string, string>> {
-  const normalizedName = name.trim().toLowerCase().replace(/\.+$/, '');
-  if (!normalizedName) throw new Error('[ENS Identity] name is required');
+  const normalizedName = normalizeEnsName(name);
 
   const rpcUrl = options.rpcUrl ?? config.rpc.standard;
   if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
@@ -197,4 +279,57 @@ export async function readTextRecords(name: string, options: ReadTextRecordOptio
     if (item.value) acc[item.key] = item.value;
     return acc;
   }, {});
+}
+
+/**
+ * Resolves AgentGate ENS text records into structured provider metadata.
+ *
+ * @param name - ENS name whose AgentGate metadata should be resolved.
+ * @param options - Optional ENS RPC and chain overrides.
+ * @returns Structured provider metadata plus the raw AgentGate records.
+ */
+export async function readAgentMetadata(name: string, options: ReadTextRecordOptions = {}): Promise<AgentMetadata> {
+  const normalizedName = normalizeEnsName(name);
+  const records = await readTextRecords(normalizedName, options);
+  return toAgentMetadata(normalizedName, records);
+}
+
+/**
+ * Discovers provider agent subnames under an ENS parent and resolves their AgentGate metadata.
+ *
+ * @param parentName - ENS parent name, for example `agentgate.eth`.
+ * @param options - Optional ENS RPC, chain, subgraph filtering, and pagination controls.
+ * @returns Structured metadata for each discovered subname.
+ */
+export async function discoverAgents(
+  parentName: string,
+  options: DiscoverAgentsOptions = {},
+): Promise<AgentMetadata[]> {
+  const normalizedParent = normalizeParentName(parentName);
+  const rpcUrl = options.rpcUrl ?? config.rpc.standard;
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+
+  const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
+  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
+  const subnameQuery = {
+    name: normalizedParent,
+    ...omitUndefinedValues({
+      searchString: options.searchString,
+      allowExpired: options.allowExpired,
+      allowDeleted: options.allowDeleted,
+      orderBy: options.orderBy,
+      orderDirection: options.orderDirection,
+      pageSize: options.pageSize,
+    }),
+  };
+  const subnames = await getSubnames(
+    publicClient as any,
+    subnameQuery,
+  );
+
+  const names = subnames
+    .map((subname) => subname.name)
+    .filter((subname): subname is string => typeof subname === 'string' && subname.length > 0);
+
+  return Promise.all(names.map((name) => readAgentMetadata(name, options)));
 }
