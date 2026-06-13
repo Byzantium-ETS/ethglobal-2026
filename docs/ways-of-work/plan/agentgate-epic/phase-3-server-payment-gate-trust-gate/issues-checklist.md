@@ -79,38 +79,38 @@
 
 ## 4) Definition of Ready Checklist (per Story/Enabler)
 
-- [ ] Story statement or enabler scope is clear and testable
-- [ ] Acceptance criteria are concrete and measurable
-- [ ] Dependencies are explicitly listed
-- [ ] Estimate assigned (Fibonacci)
-- [ ] Component and priority labels assigned
-- [ ] Test strategy reference included
+- [x] Story statement or enabler scope is clear and testable
+- [x] Acceptance criteria are concrete and measurable
+- [x] Dependencies are explicitly listed
+- [x] Estimate assigned (Fibonacci)
+- [x] Component and priority labels assigned
+- [ ] Test strategy reference included — T1/T2/T3 referenced in project-plan but not yet implemented as runnable test files
 
 ---
 
 ## 5) Definition of Done Checklist (per Story/Enabler)
 
-- [ ] Implementation merged to default branch
-- [ ] `npm --workspace @agentgate/server run build` passes
-- [ ] Response contract verified for success + failure paths
-- [ ] Trial and payment behavior validated with reproducible steps
-- [ ] Documentation updated in `docs/` or `README.md` when behavior changes
-- [ ] Related issues moved to `Done`
+- [ ] Implementation merged to default branch — **commit `2bcea33` is on `phase-3` branch; PR/merge to main pending**
+- [x] `npm --workspace @agentgate/server run build` passes — verified clean build
+- [x] Response contract verified for success + failure paths — all 6 scenarios smoke-tested (free_trial ×2, 402 ×2, paid ×2)
+- [x] Trial and payment behavior validated with reproducible steps — boundary at FREE_TRIAL_LIMIT confirmed
+- [ ] Documentation updated in `docs/` or `README.md` when behavior changes — README describes the feature at a high level but lacks Phase 3 specifics: `X-World-Proof` header, `SELLER_ADDRESS`/`CALL_PRICE`/`FREE_TRIAL_LIMIT` env vars, and response state contract (`free_trial` / `paid` / `402` payload schema)
+- [ ] Related issues moved to `Done` — requires GitHub access (repo is private)
 
 ---
 
 ## 6) Sprint Recommendation
 
 ### Sprint P3-A (10 pts)
-- [ ] `#P3-E1` (3)
-- [ ] `#P3-E3` (2)
-- [ ] `#P3-S1` (5)
+- [x] `#P3-E1` (3) — `worldMiddleware.ts` implemented
+- [x] `#P3-E3` (2) — `trialStore.ts` implemented
+- [x] `#P3-S1` (5) — verified free-trial gating in `index.ts`
 
 ### Sprint P3-B (8–10 pts)
-- [ ] `#P3-E2` (2)
-- [ ] `#P3-S2` (3)
-- [ ] `#P3-S3` (3)
-- [ ] `#P3-T2` / `#P3-T3` (optional +2)
+- [x] `#P3-E2` (2) — `sellerConfig.ts` implemented
+- [x] `#P3-S2` (3) — unverified path goes straight to x402 enforcement
+- [x] `#P3-S3` (3) — paid response returns `{ status, tx, payment, identity }`
+- [ ] `#P3-T2` / `#P3-T3` (optional +2) — test files not yet written
 
 ---
 
@@ -128,11 +128,11 @@
 
 ## 8) Rollup Completion Gate (Phase 3)
 
-- [ ] World proof middleware is active and emits verified identity context
-- [ ] Free-trial logic is enforced for verified identities only
-- [ ] Payment requirement is enforced with proper 402 challenge payload
-- [ ] Paid path returns status + payment metadata
-- [ ] Unified `/call` flow shows deterministic `free_trial` then `paid` transition
+- [x] World proof middleware is active and emits verified identity context — `worldMiddleware.ts` parses `X-World-Proof`, sets `req.worldIdentity`
+- [x] Free-trial logic is enforced for verified identities only — `trialStore.evaluatePolicy()` returns `free_trial` only when `identityKey != null`
+- [x] Payment requirement is enforced with proper 402 challenge payload — `x402Middleware` returns `{ x402Version, resource, accepts[] }` with Arc testnet details
+- [x] Paid path returns status + payment metadata — `{ status: 'paid', tx, payment: { scheme, token, network }, identity }`
+- [x] Unified `/call` flow shows deterministic `free_trial` then `paid` transition — smoke-tested: 2 free calls → 402 → paid with X402 header
 
 ---
 
