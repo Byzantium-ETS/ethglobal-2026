@@ -13,7 +13,8 @@
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 || true",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "test": "npm --workspaces run test || true",
-    "verify:ens": "tsx scripts/verify-ens-parent.ts"
+    "verify:ens": "tsx scripts/verify-ens-parent.ts",
+    "test:onchain": "npm --workspace @agentgate/sdk run test -- test/deposit.test.ts"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",

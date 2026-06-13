@@ -97,6 +97,7 @@ Use these as source-of-truth when implementing integrations:
 - **x402 HTTP contract is already implied in server middleware:** protected endpoints treat missing payment auth as HTTP 402 and accept `Authorization` or `X-402-Authorization` headers.
 - **ENS metadata keys are part of the product contract:** preserve the naming scheme used in docs (`io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`) when implementing identity writes/reads.
 - **Environment setup follows `.env.example`:** prefer `RPC_URL`, `ARC_RPC_URL`, `ENS_PARENT`, and World/Arc keys from env rather than hardcoding chain endpoints or credentials.
+- **Onchain integration checks are manual:** use `.github/workflows/onchain-integration.yml` and `docs/ONCHAIN_INTEGRATION.md` for funded-wallet checks. Do not put private-key secrets in default PR CI.
 
 ## Required development workflow
 

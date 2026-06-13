@@ -1,0 +1,65 @@
+name: Onchain Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_deposit:
+        description: Send a real Gateway deposit transaction after balance checks
+        required: true
+        type: boolean
+        default: false
+      deposit_amount:
+        description: USDC amount to deposit when run_deposit is true
+        required: true
+        type: string
+        default: '0.01'
+
+permissions:
+  contents: read
+
+jobs:
+  funded-wallet-checks:
+    name: Funded wallet checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      RPC_URL: ${{ secrets.RPC_URL }}
+      ARC_RPC_URL: ${{ secrets.ARC_RPC_URL }}
+      ARC_API_KEY: ${{ secrets.ARC_API_KEY }}
+      WORLD_API_KEY: ${{ secrets.WORLD_API_KEY }}
+      ENS_PARENT: ${{ vars.ENS_PARENT || secrets.ENS_PARENT }}
+      DEMO_PRIVATE_KEY: ${{ secrets.BUYER_PRIVATE_KEY || secrets.DEMO_PRIVATE_KEY }}
+      BUYER_ADDRESS: ${{ vars.BUYER_ADDRESS || secrets.BUYER_ADDRESS }}
+      SELLER_ADDRESS: ${{ vars.SELLER_ADDRESS || secrets.SELLER_ADDRESS }}
+      RUN_ONCHAIN_DEPOSIT: ${{ inputs.run_deposit }}
+      ONCHAIN_DEPOSIT_AMOUNT: ${{ inputs.deposit_amount }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check required configuration
+        run: |
+          missing=0
+          for name in RPC_URL ARC_RPC_URL ARC_API_KEY WORLD_API_KEY ENS_PARENT DEMO_PRIVATE_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required Actions secret or variable: ${name}"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Build SDK
+        run: npm --workspace @agentgate/sdk run build
+
+      - name: Run onchain integration checks
+        run: npm run test:onchain
