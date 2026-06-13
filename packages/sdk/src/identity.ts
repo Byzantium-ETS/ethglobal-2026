@@ -1,6 +1,6 @@
 import { addEnsContracts, createEnsPublicClient, createEnsWalletClient } from '@ensdomains/ensjs';
 import { getSubnames } from '@ensdomains/ensjs/subgraph';
-import { createSubname } from '@ensdomains/ensjs/wallet';
+import { createSubname, setRecords } from '@ensdomains/ensjs/wallet';
 import { createPublicClient, http, isAddress, type Account, type Address, type Chain, type Hash } from 'viem';
 import { holesky, mainnet, sepolia } from 'viem/chains';
 import { config } from './config';
@@ -20,6 +20,8 @@ const AGENTGATE_TEXT_KEYS = [
 ] as const;
 
 export type AgentGateTextKey = typeof AGENTGATE_TEXT_KEYS[number];
+export type AgentMetadataValue = string | boolean | readonly string[];
+export type AgentMetadataRecords = Partial<Record<AgentGateTextKey, AgentMetadataValue>>;
 
 export interface RegisterSubnameOptions {
   /** RPC endpoint for the ENS network. Defaults to `RPC_URL` from config. */
@@ -69,6 +71,11 @@ export interface DiscoverAgentsOptions extends ReadTextRecordOptions {
   orderDirection?: 'asc' | 'desc';
 }
 
+export interface SetAgentMetadataOptions extends ReadTextRecordOptions {
+  /** Resolver to write records to. Defaults to the resolver currently configured for `name`. */
+  resolverAddress?: Address;
+}
+
 export interface RegisterSubnameResult {
   /** Fully qualified ENS subname, for example `my-agent.agentgate.eth`. */
   name: string;
@@ -76,6 +83,15 @@ export interface RegisterSubnameResult {
   txHash: Hash | null;
   /** Whether the helper created the subname or returned an already-owned idempotent result. */
   status: 'created' | 'already-owned';
+}
+
+export interface SetAgentMetadataResult {
+  /** Normalized ENS name whose metadata was written. */
+  name: string;
+  /** Transaction hash for the resolver text-record write. */
+  txHash: Hash;
+  /** Normalized text records sent to the resolver. */
+  records: Partial<Record<AgentGateTextKey, string>>;
 }
 
 function normalizeEnsName(name: string): string {
@@ -164,6 +180,27 @@ function omitUndefinedValues<T extends Record<string, unknown>>(input: T): Parti
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)) as Partial<T>;
 }
 
+function normalizeMetadataValue(value: AgentMetadataValue): string {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  return String(value);
+}
+
+function normalizeMetadataRecords(records: AgentMetadataRecords): Partial<Record<AgentGateTextKey, string>> {
+  const normalizedRecords: Partial<Record<AgentGateTextKey, string>> = {};
+
+  for (const key of AGENTGATE_TEXT_KEYS) {
+    const value = records[key];
+    if (value === undefined) continue;
+    normalizedRecords[key] = normalizeMetadataValue(value);
+  }
+
+  if (Object.keys(normalizedRecords).length === 0) {
+    throw new Error('[ENS Identity] setAgentMetadata requires at least one AgentGate metadata record');
+  }
+
+  return normalizedRecords;
+}
+
 /**
  * Registers an ENS subname under a parent controlled by the signer.
  *
@@ -248,6 +285,66 @@ export async function registerSubname(
     name: fullSubname,
     txHash,
     status: 'created',
+  };
+}
+
+/**
+ * Writes AgentGate ENS text records for a provider name in one resolver transaction.
+ *
+ * @param name - ENS name whose AgentGate metadata should be updated.
+ * @param records - Supported AgentGate text records to write.
+ * @param signer - viem account that signs the resolver transaction.
+ * @param options - Optional ENS RPC, chain, and resolver overrides.
+ * @returns The normalized name, transaction hash, and normalized text records.
+ * @throws When inputs are invalid, no supported metadata is provided, the name has no resolver, or the transaction reverts.
+ */
+export async function setAgentMetadata(
+  name: string,
+  records: AgentMetadataRecords,
+  signer: Account,
+  options: SetAgentMetadataOptions = {},
+): Promise<SetAgentMetadataResult> {
+  const normalizedName = normalizeEnsName(name);
+  const normalizedRecords = normalizeMetadataRecords(records);
+
+  if (!signer?.address || !isAddress(signer.address)) {
+    throw new Error('[ENS Identity] signer must be a valid viem Account with an address');
+  }
+
+  const rpcUrl = options.rpcUrl ?? config.rpc.standard;
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+
+  const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
+  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
+  const ensPublicClient = createEnsPublicClient({ chain, transport: http(rpcUrl) });
+  const ensWalletClient = createEnsWalletClient({
+    account: signer,
+    chain,
+    transport: http(rpcUrl),
+  });
+
+  const resolverAddress = options.resolverAddress ?? await ensPublicClient.getResolver({ name: normalizedName });
+  if (!resolverAddress) {
+    throw new Error(`[ENS Identity] Name "${normalizedName}" has no resolver; set a resolver before writing metadata`);
+  }
+
+  const txHash = await setRecords(ensWalletClient, {
+    name: normalizedName,
+    resolverAddress,
+    texts: AGENTGATE_TEXT_KEYS
+      .filter((key) => normalizedRecords[key] !== undefined)
+      .map((key) => ({ key, value: normalizedRecords[key]! })),
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  if (receipt.status !== 'success') {
+    throw new Error(`[ENS Identity] metadata transaction reverted: ${txHash}`);
+  }
+
+  return {
+    name: normalizedName,
+    txHash,
+    records: normalizedRecords,
   };
 }
 

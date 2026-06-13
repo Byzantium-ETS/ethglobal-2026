@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   createEnsWalletClient: vi.fn(),
   createSubname: vi.fn(),
   getSubnames: vi.fn(),
+  setRecords: vi.fn(),
   createPublicClient: vi.fn(),
   http: vi.fn(),
   publicClient: {
@@ -16,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   },
   ensPublicClient: {
     getOwner: vi.fn(),
+    getResolver: vi.fn(),
     getTextRecord: vi.fn(),
   },
 }));
@@ -28,6 +30,7 @@ vi.mock('@ensdomains/ensjs', () => ({
 
 vi.mock('@ensdomains/ensjs/wallet', () => ({
   createSubname: mocks.createSubname,
+  setRecords: mocks.setRecords,
 }));
 
 vi.mock('@ensdomains/ensjs/subgraph', () => ({
@@ -43,7 +46,7 @@ vi.mock('viem', async () => {
   };
 });
 
-const { discoverAgents, readAgentMetadata, readTextRecords, registerSubname } = await import('../src/identity');
+const { discoverAgents, readAgentMetadata, readTextRecords, registerSubname, setAgentMetadata } = await import('../src/identity');
 
 const rpcUrl = 'https://rpc.test';
 const signer = { address: '0x1111111111111111111111111111111111111111' } as Account;
@@ -90,6 +93,7 @@ describe('identity.registerSubname', () => {
       walletClient: true,
     }));
     mocks.createSubname.mockResolvedValue('0xabc123');
+    mocks.setRecords.mockResolvedValue('0xdef456');
 
     setOwnership(null);
   });
@@ -220,6 +224,98 @@ describe('identity.registerSubname', () => {
 
     expect(mocks.publicClient.getChainId).not.toHaveBeenCalled();
     expect(mocks.addEnsContracts).toHaveBeenCalledWith(expect.objectContaining({ id: sepolia.id }));
+  });
+});
+
+describe('identity.setAgentMetadata', () => {
+  const resolverAddress = '0x4444444444444444444444444444444444444444';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mocks.http.mockImplementation((url?: string) => ({ url }));
+    mocks.createPublicClient.mockReturnValue(mocks.publicClient);
+    mocks.publicClient.getChainId.mockResolvedValue(sepolia.id);
+    mocks.publicClient.waitForTransactionReceipt.mockResolvedValue({ status: 'success' });
+    mocks.addEnsContracts.mockImplementation((chain: Chain) => ({
+      ...chain,
+      contracts: {},
+      subgraphs: {},
+    }));
+    mocks.createEnsPublicClient.mockReturnValue(mocks.ensPublicClient);
+    mocks.createEnsWalletClient.mockImplementation((clientConfig) => ({
+      ...clientConfig,
+      walletClient: true,
+    }));
+    mocks.ensPublicClient.getResolver.mockResolvedValue(resolverAddress);
+    mocks.setRecords.mockResolvedValue('0xdef456');
+  });
+
+  it('writes AgentGate metadata text records in one resolver transaction', async () => {
+    const result = await setAgentMetadata(
+      ' My-Agent.AgentGate.ETH. ',
+      {
+        description: 'AgentGate demo provider',
+        'io.agentgate.capabilities': ['summarize', 'search'],
+        'io.agentgate.x402-endpoint': 'https://provider.example/call',
+        'io.agentgate.x402-price': '0.001',
+        'io.agentgate.world-verified': true,
+      },
+      signer,
+      { rpcUrl },
+    );
+
+    expect(result).toEqual({
+      name: 'my-agent.agentgate.eth',
+      txHash: '0xdef456',
+      records: {
+        description: 'AgentGate demo provider',
+        'io.agentgate.capabilities': '["summarize","search"]',
+        'io.agentgate.x402-endpoint': 'https://provider.example/call',
+        'io.agentgate.x402-price': '0.001',
+        'io.agentgate.world-verified': 'true',
+      },
+    });
+    expect(mocks.ensPublicClient.getResolver).toHaveBeenCalledWith({ name: 'my-agent.agentgate.eth' });
+    expect(mocks.setRecords).toHaveBeenCalledWith(
+      expect.objectContaining({ walletClient: true }),
+      {
+        name: 'my-agent.agentgate.eth',
+        resolverAddress,
+        texts: [
+          { key: 'description', value: 'AgentGate demo provider' },
+          { key: 'io.agentgate.capabilities', value: '["summarize","search"]' },
+          { key: 'io.agentgate.x402-endpoint', value: 'https://provider.example/call' },
+          { key: 'io.agentgate.x402-price', value: '0.001' },
+          { key: 'io.agentgate.world-verified', value: 'true' },
+        ],
+      },
+    );
+    expect(mocks.publicClient.waitForTransactionReceipt).toHaveBeenCalledWith({ hash: '0xdef456' });
+  });
+
+  it('throws when metadata has no supported records', async () => {
+    await expect(setAgentMetadata('my-agent.agentgate.eth', {}, signer, { rpcUrl })).rejects.toThrow(
+      'at least one AgentGate metadata record',
+    );
+    expect(mocks.setRecords).not.toHaveBeenCalled();
+  });
+
+  it('throws when the ENS name has no resolver', async () => {
+    mocks.ensPublicClient.getResolver.mockResolvedValue(null);
+
+    await expect(
+      setAgentMetadata('my-agent.agentgate.eth', { description: 'missing resolver' }, signer, { rpcUrl }),
+    ).rejects.toThrow('has no resolver');
+    expect(mocks.setRecords).not.toHaveBeenCalled();
+  });
+
+  it('throws when the metadata transaction reverts', async () => {
+    mocks.publicClient.waitForTransactionReceipt.mockResolvedValue({ status: 'reverted' });
+
+    await expect(
+      setAgentMetadata('my-agent.agentgate.eth', { description: 'will revert' }, signer, { rpcUrl }),
+    ).rejects.toThrow('metadata transaction reverted');
   });
 });
 
