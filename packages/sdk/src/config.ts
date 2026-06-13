@@ -1,6 +1,11 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+import { createPublicClient, createWalletClient, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { mainnet, sepolia } from 'viem/chains';
+import { createEnsPublicClient, createEnsWalletClient } from '@ensdomains/ensjs';
+
 // Load environment variables from the root directory
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
@@ -61,8 +66,12 @@ export const config = {
   },
   get keys() {
     const env = getValidatedEnv();
+    let pk = env.DEMO_PRIVATE_KEY;
+    if (!pk.startsWith('0x')) {
+      pk = '0x' + pk;
+    }
     return {
-      privateKey: env.DEMO_PRIVATE_KEY,
+      privateKey: pk,
       arcApi: env.ARC_API_KEY,
       worldApi: env.WORLD_API_KEY,
     };
@@ -74,5 +83,65 @@ export const config = {
     };
   },
 };
+
+/**
+ * Returns viem clients (public/wallet) and ENS-specific clients from @ensdomains/ensjs,
+ * wired to the RPC_URL and DEMO_PRIVATE_KEY from the environment via config.
+ *
+ * This is the implementation of the requirement:
+ * "Create a viem/ethers provider wired to RPC_URL for ENS operations."
+ *
+ * - Auto-detects chain (Sepolia vs mainnet) from the RPC URL string.
+ * - The wallet client is pre-configured with the account from the private key.
+ * - Use ensPublicClient for reads (getOwner, getTextRecord, getResolver, ...).
+ * - Use ensWalletClient for writes (setSubnodeOwner, setTextRecord, ...).
+ */
+function getChain(rpcUrl: string) {
+  // Prefer explicit ENS_CHAIN for reliable detection (avoids brittle string matching on custom RPC URLs).
+  // Falls back to RPC_URL heuristic for backward compatibility.
+  const chainName = (process.env.ENS_CHAIN || '').toLowerCase();
+  if (chainName === 'sepolia') return sepolia;
+  if (chainName === 'mainnet') return mainnet;
+  return rpcUrl.toLowerCase().includes('sepolia') ? sepolia : mainnet;
+}
+
+export function getEnsClients() {
+  const rpcUrl = config.rpc.standard;
+  const privateKey = config.keys.privateKey as `0x${string}`;
+
+  const chain = getChain(rpcUrl) as any;
+  const account = privateKeyToAccount(privateKey);
+
+  // Raw viem clients
+  const publicClient = createPublicClient({
+    chain,
+    transport: http(rpcUrl),
+  });
+
+  const walletClient = createWalletClient({
+    chain,
+    transport: http(rpcUrl),
+    account,
+  });
+
+  // ENS-specific clients from @ensdomains/ensjs (preferred for registerSubname, text records, etc.)
+  const ensPublicClient = createEnsPublicClient({
+    chain,
+    transport: http(rpcUrl),
+  });
+
+  const ensWalletClient = createEnsWalletClient({
+    chain,
+    transport: http(rpcUrl),
+    account,
+  });
+
+  return {
+    publicClient: publicClient as any,
+    walletClient: walletClient as any,
+    ensPublicClient: ensPublicClient as any,
+    ensWalletClient: ensWalletClient as any,
+  };
+}
 
 export type Config = typeof config;
