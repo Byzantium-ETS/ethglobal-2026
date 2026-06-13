@@ -2,14 +2,12 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 // Load environment variables from the root directory
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 // Define the exact keys from your .env.example
 const REQUIRED_ENV_VARS = [
   'RPC_URL',
   'DEMO_PRIVATE_KEY',
-  'BUYER_PRIVATE_KEY',
-  'SELLER_PRIVATE_KEY',
   'ARC_API_KEY',
   'ARC_RPC_URL',
   'WORLD_API_KEY',
@@ -43,24 +41,38 @@ function validateEnv(): Record<EnvVarName, string> {
   return validatedConfig;
 }
 
-const validatedEnv = validateEnv();
+let validatedEnv: Record<EnvVarName, string> | null = null;
+
+function getValidatedEnv(): Record<EnvVarName, string> {
+  if (!validatedEnv) {
+    validatedEnv = validateEnv();
+  }
+  return validatedEnv;
+}
 
 // Export a strongly-typed, read-only configuration object
 export const config = {
-  rpc: {
-    standard: validatedEnv.RPC_URL,
-    arc: validatedEnv.ARC_RPC_URL,
+  get rpc() {
+    const env = getValidatedEnv();
+    return {
+      standard: env.RPC_URL,
+      arc: env.ARC_RPC_URL,
+    };
   },
-  keys: {
-    demoPrivate: validatedEnv.DEMO_PRIVATE_KEY,
-    buyerPrivate: validatedEnv.BUYER_PRIVATE_KEY,
-    sellerPrivate: validatedEnv.SELLER_PRIVATE_KEY,
-    arcApi: validatedEnv.ARC_API_KEY,
-    worldApi: validatedEnv.WORLD_API_KEY,
+  get keys() {
+    const env = getValidatedEnv();
+    return {
+      privateKey: env.DEMO_PRIVATE_KEY,
+      arcApi: env.ARC_API_KEY,
+      worldApi: env.WORLD_API_KEY,
+    };
   },
-  ens: {
-    parent: validatedEnv.ENS_PARENT,
+  get ens() {
+    const env = getValidatedEnv();
+    return {
+      parent: env.ENS_PARENT,
+    };
   },
-} as const;
+};
 
 export type Config = typeof config;
