@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   createEnsPublicClient: vi.fn(),
   createEnsWalletClient: vi.fn(),
   createSubname: vi.fn(),
+  getSubnames: vi.fn(),
   createPublicClient: vi.fn(),
   http: vi.fn(),
   publicClient: {
@@ -29,6 +30,10 @@ vi.mock('@ensdomains/ensjs/wallet', () => ({
   createSubname: mocks.createSubname,
 }));
 
+vi.mock('@ensdomains/ensjs/subgraph', () => ({
+  getSubnames: mocks.getSubnames,
+}));
+
 vi.mock('viem', async () => {
   const actual = await vi.importActual<typeof import('viem')>('viem');
   return {
@@ -38,7 +43,7 @@ vi.mock('viem', async () => {
   };
 });
 
-const { readTextRecords, registerSubname } = await import('../src/identity');
+const { discoverAgents, readAgentMetadata, readTextRecords, registerSubname } = await import('../src/identity');
 
 const rpcUrl = 'https://rpc.test';
 const signer = { address: '0x1111111111111111111111111111111111111111' } as Account;
@@ -274,5 +279,119 @@ describe('identity.readTextRecords', () => {
     expect(records).toEqual({
       'io.agentgate.x402-endpoint': 'https://provider.example/call',
     });
+  });
+});
+
+describe('identity.readAgentMetadata', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mocks.http.mockImplementation((url?: string) => ({ url }));
+    mocks.createPublicClient.mockReturnValue(mocks.publicClient);
+    mocks.publicClient.getChainId.mockResolvedValue(sepolia.id);
+    mocks.addEnsContracts.mockImplementation((chain: Chain) => ({
+      ...chain,
+      contracts: {},
+      subgraphs: {},
+    }));
+    mocks.createEnsPublicClient.mockReturnValue(mocks.ensPublicClient);
+    mocks.ensPublicClient.getTextRecord.mockImplementation(async ({ key }: { key: string }) => {
+      const records: Record<string, string | null> = {
+        description: 'AgentGate demo provider',
+        'io.agentgate.capabilities': '["summarize","search"]',
+        'io.agentgate.x402-endpoint': 'https://provider.example/call',
+        'io.agentgate.x402-price': '0.001',
+        'io.agentgate.world-verified': 'true',
+      };
+      return records[key] ?? null;
+    });
+  });
+
+  it('returns structured metadata from AgentGate text records', async () => {
+    const metadata = await readAgentMetadata(' My-Agent.AgentGate.ETH. ', { rpcUrl });
+
+    expect(metadata).toEqual({
+      name: 'my-agent.agentgate.eth',
+      description: 'AgentGate demo provider',
+      capabilities: ['summarize', 'search'],
+      x402Endpoint: 'https://provider.example/call',
+      x402Price: '0.001',
+      worldVerified: true,
+      records: {
+        description: 'AgentGate demo provider',
+        'io.agentgate.capabilities': '["summarize","search"]',
+        'io.agentgate.x402-endpoint': 'https://provider.example/call',
+        'io.agentgate.x402-price': '0.001',
+        'io.agentgate.world-verified': 'true',
+      },
+    });
+  });
+});
+
+describe('identity.discoverAgents', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mocks.http.mockImplementation((url?: string) => ({ url }));
+    mocks.createPublicClient.mockReturnValue(mocks.publicClient);
+    mocks.publicClient.getChainId.mockResolvedValue(sepolia.id);
+    mocks.addEnsContracts.mockImplementation((chain: Chain) => ({
+      ...chain,
+      contracts: {},
+      subgraphs: {},
+    }));
+    mocks.createEnsPublicClient.mockReturnValue(mocks.ensPublicClient);
+    mocks.getSubnames.mockResolvedValue([
+      { name: 'alpha.agentgate.eth' },
+      { name: 'beta.agentgate.eth' },
+    ]);
+    mocks.ensPublicClient.getTextRecord.mockImplementation(
+      async ({ name, key }: { name: string; key: string }) => {
+        const recordsByName: Record<string, Record<string, string | null>> = {
+          'alpha.agentgate.eth': {
+            description: 'Alpha agent',
+            'io.agentgate.capabilities': '["summarize"]',
+            'io.agentgate.x402-endpoint': 'https://alpha.example/call',
+            'io.agentgate.x402-price': '0.001',
+            'io.agentgate.world-verified': 'true',
+          },
+          'beta.agentgate.eth': {
+            description: 'Beta agent',
+            'io.agentgate.capabilities': 'search,translate',
+            'io.agentgate.x402-endpoint': 'https://beta.example/call',
+            'io.agentgate.x402-price': '0.002',
+            'io.agentgate.world-verified': 'false',
+          },
+        };
+        return recordsByName[name]?.[key] ?? null;
+      },
+    );
+  });
+
+  it('discovers subnames and returns structured agent metadata', async () => {
+    const agents = await discoverAgents(' AgentGate.ETH. ', { rpcUrl, pageSize: 25 });
+
+    expect(mocks.getSubnames).toHaveBeenCalledWith(expect.anything(), {
+      name: 'agentgate.eth',
+      pageSize: 25,
+    });
+    expect(agents).toEqual([
+      expect.objectContaining({
+        name: 'alpha.agentgate.eth',
+        description: 'Alpha agent',
+        capabilities: ['summarize'],
+        x402Endpoint: 'https://alpha.example/call',
+        x402Price: '0.001',
+        worldVerified: true,
+      }),
+      expect.objectContaining({
+        name: 'beta.agentgate.eth',
+        description: 'Beta agent',
+        capabilities: ['search', 'translate'],
+        x402Endpoint: 'https://beta.example/call',
+        x402Price: '0.002',
+        worldVerified: false,
+      }),
+    ]);
   });
 });
