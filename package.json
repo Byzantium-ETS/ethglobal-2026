@@ -12,7 +12,8 @@
     "build:packages": "npm --workspace packages/sdk run build || true && npm --workspace packages/server run build || true",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 || true",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "test": "npm --workspaces run test || true"
+    "test": "npm --workspaces run test || true",
+    "verify:ens": "npx tsx scripts/verify-ens-parent.ts"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
