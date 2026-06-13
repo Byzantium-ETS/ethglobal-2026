@@ -26,8 +26,9 @@ Run commands from the repository root unless noted.
   - `npm --workspace @agentgate/sdk run test`
   - `npm --workspace @agentgate/server run test`
   - `npm --workspace agentgate-demo run test`
+- Example single SDK test file: `npm --workspace @agentgate/sdk run test -- test/identity.test.ts`
 
-> Current status: test scripts are placeholders (`"no tests"`), so there is no single-test-file command yet.
+> Current status: the SDK has focused Vitest coverage; server and demo tests are still placeholders (`"no tests"`).
 
 ## High-level architecture
 
@@ -90,7 +91,7 @@ Use these as source-of-truth when implementing integrations:
 
 - **Workspace-first workflow:** Use npm workspace commands (`npm --workspace ...`) rather than running tools directly inside package folders.
 - **TypeScript outputs to `dist/` in every package:** each package `tsconfig.json` sets `rootDir: src` and `outDir: dist`.
-- **Lint/test scripts are non-blocking right now:** root lint/test scripts include `|| true`, and package tests are placeholders. Do not assume quality gates are enforced by scripts yet.
+- **Lint/test scripts are not fully blocking yet:** root lint/test scripts include `|| true`, and server/demo tests are placeholders. Use package-level SDK test commands for strict SDK verification.
 - **SDK module boundaries are semantic, not utility-based:** keep new logic in `identity`, `payments`, or `trust` according to Arc/ENS/World ownership, and re-export via `packages/sdk/src/index.ts`.
 - **x402 HTTP contract is already implied in server middleware:** protected endpoints treat missing payment auth as HTTP 402 and accept `Authorization` or `X-402-Authorization` headers.
 - **ENS metadata keys are part of the product contract:** preserve the naming scheme used in docs (`io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`) when implementing identity writes/reads.
