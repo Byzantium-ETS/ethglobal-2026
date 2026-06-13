@@ -9,6 +9,10 @@ beforeAll(() => {
   process.env.DEMO_PRIVATE_KEY = process.env.DEMO_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000001';
   process.env.ENS_PARENT = process.env.ENS_PARENT || 'agentgate.eth';
   process.env.ENS_CHAIN = process.env.ENS_CHAIN || 'sepolia';
+  // Set all required for config validation, even if not used by ENS provider
+  process.env.ARC_API_KEY = process.env.ARC_API_KEY || 'dummy';
+  process.env.ARC_RPC_URL = process.env.ARC_RPC_URL || 'https://rpc.testnet.arc.network';
+  process.env.WORLD_API_KEY = process.env.WORLD_API_KEY || 'dummy';
 });
 
 describe('ENS Provider (viem/ethers + ensjs clients wired to RPC_URL)', () => {
