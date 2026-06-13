@@ -33,15 +33,34 @@ export interface PaymentChallenge {
 
 function getSellerAddress(): string {
   const addr = process.env.SELLER_ADDRESS;
-  if (!addr) {
-    console.warn('[SellerConfig] SELLER_ADDRESS not set — using zero address placeholder');
-    return '0x0000000000000000000000000000000000000000';
+
+  if (!addr || addr.trim() === '') {
+    if (process.env.NODE_ENV === 'test') {
+      console.warn('[SellerConfig] SELLER_ADDRESS not set — using zero address for test mode only');
+      return '0x0000000000000000000000000000000000000000';
+    }
+    throw new Error(
+      '[SellerConfig] SELLER_ADDRESS is required. ' +
+      'Set it to the Ethereum address that should receive payments. ' +
+      'Use NODE_ENV=test to bypass this check in local smoke tests.',
+    );
   }
-  return addr;
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(addr.trim())) {
+    throw new Error(
+      `[SellerConfig] SELLER_ADDRESS "${addr}" is not a valid Ethereum address (expected 0x + 40 hex chars).`,
+    );
+  }
+
+  return addr.trim();
 }
 
+// Validated once at startup — any misconfiguration crashes the process immediately
+// rather than silently issuing 402 challenges that pay to the zero address.
+const SELLER_ADDRESS = getSellerAddress();
+
 export const sellerConfig = {
-  get address() { return getSellerAddress(); },
+  get address() { return SELLER_ADDRESS; },
   get price() { return process.env.CALL_PRICE ?? DEFAULT_CALL_PRICE; },
   network: ARC_CHAIN,
   asset: ARC_USDC,

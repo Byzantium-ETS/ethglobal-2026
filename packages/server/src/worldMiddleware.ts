@@ -1,4 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import {
+  AGENTKIT,
+  createAgentBookVerifier,
+  parseAgentkitHeader,
+  validateAgentkitMessage,
+  verifyAgentkitSignature,
+} from '@worldcoin/agentkit';
 
 // Augment Express Request to carry the verified World identity key
 declare global {
@@ -9,71 +16,67 @@ declare global {
   }
 }
 
-interface WorldProofPayload {
-  proofType: string;
-  timestamp: number;
-  challenge: string;
-  signature: string;
-}
+// Singleton verifier — connects to AgentBook on World Chain (eip155:480)
+const agentBook = createAgentBookVerifier({
+  rpcUrl: process.env.WORLD_RPC_URL,
+});
 
-const PROOF_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
+/**
+ * Reads the `agentkit` header, runs the full AgentKit server-side verification
+ * pipeline, and attaches req.worldIdentity to the request.
+ *
+ * Verification pipeline:
+ *   1. parseAgentkitHeader   — decode and schema-validate the base64 payload
+ *   2. validateAgentkitMessage — check resource URI binding and freshness
+ *   3. verifyAgentkitSignature — recover the signer address (SIWE / EIP-1271)
+ *   4. agentBook.lookupHuman  — resolve address → anonymous human ID on-chain
+ *
+ * Always calls next() — a missing or invalid proof sets identity to null so
+ * downstream middleware can enforce x402 payment instead.
+ */
+export async function worldMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  const header = req.header(AGENTKIT);
 
-function parseProofHeader(header: string): WorldProofPayload | null {
+  if (!header) {
+    req.worldIdentity = null;
+    return next();
+  }
+
   try {
-    const decoded = Buffer.from(header, 'base64').toString('utf-8');
-    const parsed: unknown = JSON.parse(decoded);
-    if (
-      typeof parsed === 'object' && parsed !== null &&
-      'proofType' in parsed && typeof (parsed as Record<string, unknown>).proofType === 'string' &&
-      'timestamp' in parsed && typeof (parsed as Record<string, unknown>).timestamp === 'number' &&
-      'challenge' in parsed && typeof (parsed as Record<string, unknown>).challenge === 'string' &&
-      'signature' in parsed && typeof (parsed as Record<string, unknown>).signature === 'string'
-    ) {
-      return parsed as WorldProofPayload;
+    // 1. Decode the base64 agentkit header into a structured payload
+    const payload = parseAgentkitHeader(header);
+
+    // 2. Validate message binding and freshness (default max age: 5 minutes)
+    const resourceUri = `${req.protocol}://${req.get('host')}${req.path}`;
+    const validation = await validateAgentkitMessage(payload, resourceUri);
+    if (!validation.valid) {
+      console.debug(`[WorldMiddleware] Message validation failed: ${validation.error}`);
+      req.worldIdentity = null;
+      return next();
     }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
-/**
- * Derives a stable, normalised identity key from a validated proof.
- * In production this would verify via World AgentKit on-chain;
- * for demo determinism we derive from the proof signature prefix.
- */
-function deriveIdentityKey(proof: WorldProofPayload): string {
-  return `world:${proof.signature.slice(0, 20)}`;
-}
+    // 3. Verify the cryptographic signature and recover the signer address
+    const verification = await verifyAgentkitSignature(payload, process.env.WORLD_RPC_URL);
+    if (!verification.valid || !verification.address) {
+      console.debug(`[WorldMiddleware] Signature verification failed: ${verification.error}`);
+      req.worldIdentity = null;
+      return next();
+    }
 
-/**
- * Parses the X-World-Proof header and attaches req.worldIdentity.
- * Always calls next() — a missing or invalid proof simply sets identity to null
- * so downstream middleware can enforce payment instead.
- */
-export function worldMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  const proofHeader = req.header('X-World-Proof');
+    // 4. Resolve the signer address to an anonymous human ID via AgentBook
+    const humanId = await agentBook.lookupHuman(verification.address);
+    if (!humanId) {
+      console.debug(`[WorldMiddleware] Address not registered in AgentBook: ${verification.address}`);
+      req.worldIdentity = null;
+      return next();
+    }
 
-  if (!proofHeader) {
+    req.worldIdentity = humanId;
+    console.debug(`[WorldMiddleware] Verified identity: ${humanId} (address: ${verification.address})`);
+  } catch (err: any) {
+    console.debug(`[WorldMiddleware] Verification error: ${err.message}`);
     req.worldIdentity = null;
-    return next();
   }
 
-  const proof = parseProofHeader(proofHeader);
-  if (!proof) {
-    console.debug('[WorldMiddleware] Could not parse X-World-Proof header');
-    req.worldIdentity = null;
-    return next();
-  }
-
-  const ageMs = Date.now() - proof.timestamp;
-  if (ageMs > PROOF_MAX_AGE_MS) {
-    console.debug(`[WorldMiddleware] Proof expired (age ${ageMs}ms)`);
-    req.worldIdentity = null;
-    return next();
-  }
-
-  req.worldIdentity = deriveIdentityKey(proof);
-  console.debug(`[WorldMiddleware] Verified identity: ${req.worldIdentity}`);
   next();
 }

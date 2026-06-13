@@ -1,5 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { buildPaymentChallenge } from './sellerConfig';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { paymentMiddleware, x402ResourceServer } from '@x402/express';
+import { BatchFacilitatorClient, GatewayEvmScheme } from '@circle-fin/x402-batching/server';
+import { sellerConfig } from './sellerConfig';
 
 // Augment Express Request to carry payment metadata for the handler
 declare global {
@@ -14,39 +16,64 @@ declare global {
   }
 }
 
+function buildResourceServer(): x402ResourceServer {
+  const apiHeader: Record<string, string> = process.env.CIRCLE_API_KEY
+    ? { Authorization: `Bearer ${process.env.CIRCLE_API_KEY}` }
+    : {};
+
+  const facilitatorClient = new BatchFacilitatorClient({
+    createAuthHeaders: async () => ({
+      verify: apiHeader,
+      settle: apiHeader,
+      supported: apiHeader,
+    }),
+  });
+
+  // GatewayEvmScheme extends ExactEvmScheme, supporting both onchain and nanopayments
+  return new x402ResourceServer([facilitatorClient as any])
+    .register('eip155:*', new GatewayEvmScheme() as any);
+}
+
+const _inner = paymentMiddleware(
+  {
+    '/call': {
+      accepts: {
+        scheme: 'exact',
+        network: sellerConfig.network as `${string}:${string}`,
+        payTo: () => sellerConfig.address,
+        price: {
+          asset: sellerConfig.asset,
+          amount: sellerConfig.price,
+          extra: {
+            name: 'GatewayWalletBatched',
+            version: '1',
+            verifyingContract: sellerConfig.gatewayContract,
+          },
+        },
+        maxTimeoutSeconds: 60,
+      },
+    },
+  },
+  buildResourceServer(),
+);
+
 /**
- * Validates the x402 payment authorization on the incoming request.
- * Accepts Authorization or X-402-Authorization headers with an "X402 <token>" value.
- * Returns HTTP 402 with a machine-readable challenge payload when payment is absent or invalid.
+ * Validates the x402 payment on the incoming request via @x402/express.
+ * Reads the `payment-signature` or `x-payment` header.
+ * Returns HTTP 402 with a machine-readable challenge when payment is absent or invalid.
+ * Settlement occurs after the handler writes its response.
  */
-export function x402Middleware(req: Request, res: Response, next: NextFunction): void {
-  const auth = req.header('Authorization') || req.header('X-402-Authorization');
-
-  if (!auth) {
-    res.status(402).json({
-      error: 'Payment required',
-      ...buildPaymentChallenge(req.path),
-    });
-    return;
-  }
-
-  const isX402 = auth.startsWith('X402 ');
-  const isBearer = auth.startsWith('Bearer ');
-
-  if (!isX402 && !isBearer) {
-    res.status(402).json({
-      error: 'Invalid payment authorization format — expected "X402 <token>" or "Bearer <token>"',
-      ...buildPaymentChallenge(req.path),
-    });
-    return;
-  }
-
-  const token = auth.replace(/^(X402|Bearer)\s+/, '');
-  req.paymentMetadata = {
-    scheme: isX402 ? 'x402' : 'bearer',
-    token,
-    network: 'eip155:5042002',
+export const x402Middleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  const patchedNext: NextFunction = (err?: any) => {
+    if (!err) {
+      req.paymentMetadata = {
+        scheme: 'exact',
+        token: req.header('payment-signature') || req.header('x-payment') || '',
+        network: sellerConfig.network,
+      };
+    }
+    return next(err);
   };
 
-  next();
-}
+  return _inner(req, res, patchedNext);
+};
