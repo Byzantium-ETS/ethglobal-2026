@@ -88,6 +88,7 @@ Use these as source-of-truth when implementing integrations:
 
 ## Key conventions in this repository
 
+- **Hackathon compliance:** read `docs/HACKATHON_SUBMISSION.md` before submission, demo, README, sponsor-prize, AI-disclosure, or judging-prep work.
 - **Workspace-first workflow:** Use npm workspace commands (`npm --workspace ...`) rather than running tools directly inside package folders.
 - **TypeScript outputs to `dist/` in every package:** each package `tsconfig.json` sets `rootDir: src` and `outDir: dist`.
 - **Lint/test scripts are non-blocking right now:** root lint/test scripts include `|| true`, and package tests are placeholders. Do not assume quality gates are enforced by scripts yet.
@@ -102,6 +103,7 @@ Use these as source-of-truth when implementing integrations:
 - **Do not treat placeholder tests as enough:** if the touched package still has placeholder tests, add meaningful coverage for the changed behavior or document the remaining gap in the PR.
 - **Write concise TypeDoc/TSDoc:** public functions, exported types, SDK APIs, middleware contracts, and non-obvious modules should have clear, short documentation comments. Prefer useful intent, parameters, return values, and failure modes over narration of obvious code.
 - **Keep documentation close to the surface area:** update README, `.env.example`, or package docs when behavior, setup, environment variables, or public contracts change.
+- **Preserve hackathon evidence:** keep commit history reviewable, document reused public libraries or starter kits, and disclose AI-assisted work as described in `docs/HACKATHON_SUBMISSION.md`.
 - **Create a branch before committing:** never commit directly on `main`. Use a scoped branch name such as `feat/...`, `fix/...`, `ci/...`, `docs/...`, or `test/...`.
 - **Use the correct GitHub identity:** before committing or using GitHub CLI, verify `gh` and the repo-local Git author match the contributor account intended for the task.
 - **Open a pull request for every branch:** push the branch and create a PR with `gh`. Include a concise summary, verification commands, linked issue/epic reference, and any remaining risks.
