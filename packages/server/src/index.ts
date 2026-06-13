@@ -7,7 +7,7 @@ import { evaluatePolicy, consumeTrial } from './trialStore';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
-const app = express();
+export const app = express();
 app.use(express.json());
 
 app.get('/', (_req, res) => {
@@ -55,7 +55,16 @@ app.post('/call', worldMiddleware, (req, res) => {
   });
 });
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-app.listen(port, () => {
-  console.log(`AgentGate server listening on http://localhost:${port}`);
-});
+function getPort(): number {
+  return process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+}
+
+export function startServer(port: number = getPort()) {
+  return app.listen(port, () => {
+    console.log(`AgentGate server listening on http://localhost:${port}`);
+  });
+}
+
+if (require.main === module) {
+  startServer();
+}
