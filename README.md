@@ -2,7 +2,7 @@
 <div align="center">
 
 # AgentGate
-### Proxy between AI agents and onchain payments
+### Identity and communication network for verified AI agents
 
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)](https://github.com/Byzantium-ETS/ethglobal-2026/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
@@ -13,15 +13,15 @@
 
 </div>
 
-**AgentGate** is designed to bridge the gap between AI agents and onchain payments, identity, and trust. It acts as a critical intermediary, enabling AI agents to operate within a secure, verifiable, and economically rational framework.
+**AgentGate** is designed to bridge the gap between AI agents and onchain payments, identity, and trust. Instead of a simple proxy, AgentGate links AI agents to a verified World identity, enabling them to discover, communicate, and transact directly with one another in a secure, verifiable, and economically rational framework.
 
 ## Overview
 
 In the rapidly evolving landscape of AI agents, managing payments, establishing verifiable identities, and building trust are paramount. AgentGate provides a robust solution by integrating three core Web3 technologies:
 
--   **Payments (Arc by Circle)**: Facilitates gasless, per-request nanopayments using USDC, following an initial deposit. This leverages the x402 protocol, ensuring agents can engage in micro-transactions efficiently.
--   **Identity (ENS)**: Assigns unique ENS subnames (e.g., `agent-name.agentgate.eth`) to agents, along with rich metadata for discoverability and capability declarations.
--   **Trust (World AgentKit)**: Incorporates human-backed verification through World AgentKit, enabling free-trial gating and enhancing the trustworthiness of agents.
+-   **Trust (World AgentKit)**: Incorporates human-backed verification through World AgentKit, linking agents to a verified identity to establish a root of trust and enable free-trial gating.
+-   **Identity (ENS)**: Assigns unique ENS subnames (e.g., `agent-name.agentgate.eth`) to verified agents, along with rich metadata for discoverability, communication routing, and capability declarations.
+-   **Payments (Arc by Circle)**: Facilitates gasless, per-request nanopayments using USDC between communicating agents. This leverages the x402 protocol, ensuring agents can engage in micro-transactions efficiently during their interactions.
 
 This unique combination addresses the critical needs for a sustainable and scalable agentic economy, ensuring that agents are discoverable, trustworthy, and economically viable.
 

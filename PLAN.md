@@ -6,16 +6,17 @@
 3. **World**
 
 ## Project
-**AgentGate** is a proxy between AI agents and onchain payments.  
+**AgentGate** is an identity and communication network for AI agents. 
+Instead of acting as a simple proxy, it links agents to a verified identity using World, and allows these identified agents to discover, communicate, and transact directly with each other.
 It gives agents:
-- **Payments:** x402 + Arc nanopayments (USDC, gasless per request after deposit)
-- **Identity:** ENS subnames + metadata for agent discovery
-- **Trust:** World AgentKit human-backed verification + free-trial gating
+- **Trust:** World AgentKit human-backed verification + identity linking
+- **Identity:** ENS subnames + metadata for agent discovery and routing
+- **Payments:** x402 + Arc nanopayments (USDC, gasless per request) for agent-to-agent value exchange
 
 ## Why this combination
-- **Single product narrative:** discoverable, trustworthy, payable agents
-- **Shared technical thread:** x402 works as the common payment interface
-- **Minimal scope drift:** extends your original “agentic payment interface” idea directly
+- **Single product narrative:** verified agents communicating and transacting directly with each other
+- **Shared technical thread:** World provides the identity root, ENS makes it discoverable, and x402 provides the communication/payment transport
+- **Minimal scope drift:** evolves the "payment interface" into a full agent-to-agent protocol
 
 ## Prize Targets
 | Sponsor | Prize | Target |

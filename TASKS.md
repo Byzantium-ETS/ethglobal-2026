@@ -48,17 +48,17 @@ This document outlines the specific tasks required to complete the AgentGate pro
   - Implement AgentKit request wrapper on the consumer side.
   - Implement logic to register an agent wallet in the World AgentBook.
 
-## Phase 3: Provider Server Development
+## Phase 3: Agent Endpoint Server Development
 
-*Goal: Build the backend that serves the AI agent, enforces payments, and handles free trials.*
+*Goal: Build the communication endpoint for the AI agent that handles direct agent-to-agent requests, enforces payments, and verifies World identity/free trials.*
 
 - [ ] **Task 3.1: Server Scaffold**
-  - Setup a basic Express/Fastify server in `packages/server`.
+  - Setup a basic Express/Fastify server in `packages/server` to act as the agent's receiving endpoint.
 - [ ] **Task 3.2: x402 Middleware**
-  - Implement x402 seller middleware.
+  - Implement x402 seller middleware for incoming agent requests.
   - Enforce payment requirements (return HTTP 402 if payment is invalid/missing).
   - Validate and process Arc nanopayment settlements.
-- [ ] **Task 3.3: Free-Trial Logic (World Integration)**
+- [ ] **Task 3.3: Identity & Free-Trial Logic (World Integration)**
   - Integrate Server-side AgentKit free-trial extension hooks.
   - Implement state tracking (e.g., in-memory or lightweight DB) to track usage per verified human.
   - Configure logic: Allow 3-5 free uses, then fallback to requiring the x402 payment path.
@@ -68,13 +68,13 @@ This document outlines the specific tasks required to complete the AgentGate pro
 *Goal: Combine all pieces into a working end-to-end demonstration.*
 
 - [ ] **Task 4.1: Provider Agent Setup (Demo)**
-  - Create a script in `demo` to start the provider server.
-  - Ensure the provider registers itself via ENS (Task 2B) and AgentBook (Task 2C) on startup.
+  - Create a script in `demo` to start the provider agent's server.
+  - Ensure the agent registers its identity via ENS (Task 2B) and AgentBook (Task 2C) on startup.
 - [ ] **Task 4.2: Consumer Agent CLI/UI (Demo)**
-  - Create a minimal CLI or UI in `demo` representing the "Consumer Agent".
-  - Implement the "Discover" step: Find the provider via ENS.
-  - Implement the "Call" step (Trust Gate): Attempt a free call using World AgentKit proof.
-  - Implement the "Pay" step: Fallback to the x402 payment flow when the trial runs out.
+  - Create a minimal CLI or UI in `demo` representing the "Consumer Agent" that wants to interact with another agent.
+  - Implement the "Discover" step: Find the provider agent via ENS.
+  - Implement the "Call" step (Trust Gate): Attempt a direct free call using World AgentKit identity proof.
+  - Implement the "Pay" step: Fallback to the x402 nanopayment flow for direct value exchange when the trial runs out.
 - [ ] **Task 4.3: End-to-End Validation**
   - Run the full loop: Register -> Discover -> Free Call -> Paid Call -> Settlement.
   - Fix bugs and edge cases.
