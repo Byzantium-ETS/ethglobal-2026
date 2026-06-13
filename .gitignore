@@ -1,12 +1,16 @@
 # dependencies
 node_modules/
+.npm/
 
 # build output
 dist/
+*.tsbuildinfo
 
 # environment
 .env
 .env.local
+.env.*
+!.env.example
 
 # OS
 .DS_Store
@@ -19,7 +23,12 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
 
 # other
 coverage/
+.nyc_output/
+.eslintcache
+.vitest/
 package-lock.json
