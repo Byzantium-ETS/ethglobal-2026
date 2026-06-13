@@ -10,8 +10,13 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" || true"
   },
   "dependencies": {
+    "@circle-fin/x402-batching": "^3.0.4",
     "@ensdomains/ensjs": "^3.3.0",
-    "ethers": "^6.9.0"
+    "@x402/core": "^2.15.0",
+    "@x402/evm": "^2.15.0",
+    "@x402/fetch": "^2.15.0",
+    "ethers": "^6.9.0",
+    "viem": "^2.52.2"
   },
   "devDependencies": {
     "@types/node": "^20.5.0"
