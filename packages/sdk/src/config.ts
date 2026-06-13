@@ -97,6 +97,11 @@ export const config = {
  * - Use ensWalletClient for writes (setSubnodeOwner, setTextRecord, ...).
  */
 function getChain(rpcUrl: string) {
+  // Prefer explicit ENS_CHAIN for reliable detection (avoids brittle string matching on custom RPC URLs).
+  // Falls back to RPC_URL heuristic for backward compatibility.
+  const chainName = (process.env.ENS_CHAIN || '').toLowerCase();
+  if (chainName === 'sepolia') return sepolia;
+  if (chainName === 'mainnet') return mainnet;
   return rpcUrl.toLowerCase().includes('sepolia') ? sepolia : mainnet;
 }
 

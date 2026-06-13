@@ -42,8 +42,10 @@ async function main() {
   }
 
   // Detect chain
-  const isSepolia = rpcUrl.toLowerCase().includes('sepolia');
-  const chain = isSepolia ? sepolia : mainnet;
+  // Prefer explicit ENS_CHAIN for reliable detection (avoids brittle string matching on custom RPC URLs).
+  // Falls back to RPC_URL heuristic for backward compatibility.
+  const chainName = (process.env.ENS_CHAIN || '').toLowerCase();
+  const chain = chainName === 'sepolia' ? sepolia : (chainName === 'mainnet' ? mainnet : (rpcUrl.toLowerCase().includes('sepolia') ? sepolia : mainnet));
 
   const publicClient = createEnsPublicClient({
     chain,

@@ -1,16 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getEnsClients } from '../src/config';
 import { registerSubname, readTextRecords } from '../src/identity';
 
-// Only run when required env is present (matches pattern in deposit.test.ts).
-// In CI (no .env), this describe is skipped so npm test still passes cleanly.
-const hasRequiredEnv = !!(
-  process.env.RPC_URL &&
-  process.env.DEMO_PRIVATE_KEY &&
-  process.env.ENS_PARENT
-);
+// Provide default env for non-network unit tests so they run in CI and provide coverage.
+// Real integration tests can override with actual values.
+beforeAll(() => {
+  process.env.RPC_URL = process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com';
+  process.env.DEMO_PRIVATE_KEY = process.env.DEMO_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000001';
+  process.env.ENS_PARENT = process.env.ENS_PARENT || 'agentgate.eth';
+  process.env.ENS_CHAIN = process.env.ENS_CHAIN || 'sepolia';
+});
 
-describe.skipIf(!hasRequiredEnv)('ENS Provider (viem/ethers + ensjs clients wired to RPC_URL)', () => {
+describe('ENS Provider (viem/ethers + ensjs clients wired to RPC_URL)', () => {
   it('should create the provider clients wired to the configured RPC_URL', () => {
     const clients = getEnsClients();
 
