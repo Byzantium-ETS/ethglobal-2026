@@ -107,6 +107,8 @@ To get started with AgentGate, follow these general steps. More detailed instruc
 
 For hackathon submission rules, AI-use disclosure, demo video requirements, partner-prize preparation, and judging checklists, see [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md).
 
+For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 payment headers, and the current trust mock boundary while 2C.2/2C.3 are in progress, see [`docs/PHASE_3_SMOKE.md`](docs/PHASE_3_SMOKE.md).
+
 ### Prerequisites
 
 -   Node.js (LTS recommended)
@@ -127,7 +129,15 @@ For hackathon submission rules, AI-use disclosure, demo video requirements, part
 3.  **Set up environment variables**:
     Create a `.env` file in the root directory and configure necessary keys and endpoints for Arc, ENS, and World (e.g., RPC URLs, private keys for demo wallets).
 4.  **Run the demo**:
-    Specific scripts for running the demo will be provided in the `demo` package. This will likely involve starting a provider agent and a consumer agent.
+    Build the workspaces, start the provider server, then run the demo package:
+
+    ```bash
+    npm run build
+    npm --workspace @agentgate/server run start
+    npm --workspace agentgate-demo run start
+    ```
+
+    By default the demo probes the provider, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
 
 <br>
 

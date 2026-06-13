@@ -13,8 +13,14 @@
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings=0 || true",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "test": "npm --workspaces run test || true",
+    "check:env": "tsx scripts/check-env-example.ts",
+    "check:secrets": "tsx scripts/check-no-secrets.ts",
     "verify:ens": "tsx scripts/verify-ens-parent.ts",
-    "test:onchain": "npm --workspace @agentgate/sdk run test -- test/deposit.test.ts"
+    "test:onchain": "npm --workspace @agentgate/sdk run test -- test/deposit.test.ts",
+    "smoke:anvil": "tsx scripts/smoke/anvil-local.ts",
+    "smoke:ens": "tsx scripts/smoke/ens-integration.ts",
+    "smoke:x402": "tsx scripts/smoke/x402-live.ts",
+    "smoke:world": "tsx scripts/smoke/world-trust.ts"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",

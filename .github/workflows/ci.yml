@@ -26,6 +26,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Environment parity check
+        run: npm run check:env
+
+      - name: No secrets in git check
+        run: npm run check:secrets
+
       - name: Build
         run: npm run build
 
