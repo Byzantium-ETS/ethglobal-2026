@@ -1,159 +1,160 @@
-# AgentGate — ETHGlobal Plan
+# AgentGate — ETHGlobal Execution Plan
 
-## Focused Sponsors
-1. **Arc (Circle)**
-2. **ENS**
-3. **World**
+## Focus Sponsors (Primary Targets)
+1. **Arc (Circle)** — micropayments and agent economy rails
+2. **ENS** — agent identity + metadata discovery
+3. **World** — human-backed trust signal for agents
 
-## Project
-**AgentGate** is an identity and communication network for AI agents. 
-Instead of acting as a simple proxy, it links agents to a verified identity using World, and allows these identified agents to discover, communicate, and transact directly with each other.
-It gives agents:
-- **Trust:** World AgentKit human-backed verification + identity linking
-- **Identity:** ENS subnames + metadata for agent discovery and routing
-- **Payments:** x402 + Arc nanopayments (USDC, gasless per request) for agent-to-agent value exchange
+## One-Sentence Product Thesis
+**AgentGate** turns agent-to-agent calls into a trusted, discoverable, and monetizable protocol by combining **World verification (trust)** + **ENS identity (discovery/routing)** + **x402 on Arc (payment transport)**.
 
-## Why this combination
-- **Single product narrative:** verified agents communicating and transacting directly with each other
-- **Shared technical thread:** World provides the identity root, ENS makes it discoverable, and x402 provides the communication/payment transport
-- **Minimal scope drift:** evolves the "payment interface" into a full agent-to-agent protocol
+## Current Repo Reality (Starting Point)
+The monorepo already has the right package boundaries but mostly stub implementations:
 
-## Prize Targets
-| Sponsor | Prize | Target |
-|---|---|---|
-| Arc (Circle) | Best Agentic Economy with Circle Agent Stack | 1st |
-| ENS | Best ENS Integration for AI Agents | 1st |
-| ENS | Integrate ENS (pool) | Qualify |
-| World | Track A (AgentKit) | 1st |
+- `packages/sdk`
+  - `identity.ts` has placeholder subname and text-record reads
+  - `payments.ts` has placeholder deposit/authorization methods
+  - `trust.ts` has placeholder world-proof and wallet registration methods
+- `packages/server`
+  - Express API with `/call`
+  - `x402Middleware` currently checks for auth header and returns `402` if missing
+- `demo`
+  - Minimal placeholder script output
 
-Estimated upside if all hit strongly: **~$8.7k–$9.2k** (plus ENS pool variability).
+This plan assumes we keep the architecture and replace stubs with one polished, demo-ready path.
 
-## Product Flow (Demo)
-1. **Register agent**
-   - Mint `agent-name.agentgate.eth`
-   - Store capabilities + x402 endpoint + price in ENS text records
-   - Register agent identity on Arc (ERC-8004 registry optional but recommended)
-2. **Discover agent**
-   - Consumer agent lists subnames under `agentgate.eth`
-   - Resolves selected name to address + endpoint metadata
-3. **Trust gate**
-   - Consumer agent uses World AgentKit proof
-   - Receives 3–5 free calls (trial mode)
-4. **Paid usage**
-   - After trial, calls require x402 payment
-   - Settlement via Arc nanopayment flow in USDC
-5. **Feedback**
-   - Record service quality signal (onchain or app-level leaderboard)
+## Demo Narrative (What Judges Should See)
+1. **Provider registers** `my-agent.agentgate.eth` and writes capabilities + price + endpoint metadata.
+2. **Consumer discovers** provider via ENS metadata resolution.
+3. **Consumer proves human backing** (World/AgentKit signal) and receives limited free calls.
+4. **Trial expires** and the same endpoint flips to enforced x402 payment.
+5. **Consumer pays in USDC via Arc flow** and receives successful paid response.
 
-## Architecture
-- **SDK package (`packages/sdk`)**
-  - `identity`: ENS register/read/discover
-  - `payments`: x402 client wrapper + Arc settlement config
-  - `trust`: World AgentKit client wrapper
-- **Provider server (`packages/server`)**
-  - x402-protected endpoints
-  - AgentKit free-trial extension hooks
-- **Demo app/scripts (`demo`)**
-  - Provider agent + consumer agent end-to-end
+## Product Contract (Do Not Drift)
+Keep these ENS text record keys stable:
 
-## Core Integrations
+- `io.agentgate.capabilities`
+- `io.agentgate.x402-endpoint`
+- `io.agentgate.x402-price`
+- `io.agentgate.world-verified`
 
-### 1) Arc (Circle): x402 Nanopayments
-- Use `@circle-fin/x402-batching` for buyer + seller paths.
-- Buyer deposits USDC once, then signs offchain authorizations for per-call micro-payments.
-- Seller endpoint enforces payment requirement (`402`) and validates settlement.
+Keep payment header handling stable on server:
 
-### 2) ENS: Identity + Discovery
-- Use `@ensdomains/ensjs`.
-- Programmatic subname creation under a parent (`agentgate.eth`).
-- Text records:
-  - `description`
-  - `io.agentgate.capabilities`
-  - `io.agentgate.x402-endpoint`
-  - `io.agentgate.x402-price`
-  - `io.agentgate.world-verified`
+- `Authorization`
+- `X-402-Authorization`
 
-### 3) World: Human-Backed Agents
-- Use `@worldcoin/agentkit`.
-- Register agent wallet in AgentBook.
-- Server config: free-trial mode (e.g., 5 uses per endpoint per human).
-- After trial exhaustion, fall back to x402 payment path.
+## Scope Boundaries (Hackathon-Safe)
+**In scope**
+- One provider + one consumer flow
+- One paid endpoint (`POST /call`)
+- Deterministic free-trial gate (per verified user / endpoint)
+- ENS registration + read/discovery for at least one working name
 
-## 48-Hour Build Plan
+**Out of scope (unless time remains)**
+- Multi-provider marketplace UX
+- Complex reputation systems
+- Full onchain feedback or staking mechanics
+- Generalized billing dashboards
 
-### Phase 1 — Friday (5h): Payment Skeleton
-- Monorepo scaffold
-- Arc testnet wallet setup + funding
-- x402 buyer wrapper (`agentgate.fetch`)
-- x402 seller middleware endpoint
-- Confirm paid request loop end-to-end
+## Implementation Plan (48 Hours)
 
-### Phase 2 — Saturday AM (4h): ENS Identity
-- Parent ENS setup
-- Subname registration function
-- Metadata text record writer
-- Discovery/read function from subgraph + resolver
+### Phase 1 — Payment Path First (Friday, ~5h)
+**Goal:** paid request loop works end-to-end even before trust/identity polish.
 
-### Phase 3 — Saturday PM (4h): World Trust Layer
-- AgentKit registration flow for demo wallets
-- AgentKit request wrapper on consumer side
-- Server-side free-trial hook integration
-- Validate verified-vs-unverified behavior
+- Implement `payments` SDK wrapper around x402/Arc buyer primitives.
+- Upgrade server x402 middleware from header presence check to auth validation path (or tight adapter around official flow).
+- Add deterministic pricing config for `/call` and clear `402` challenge behavior.
+- Validate one successful paid request from demo client to server.
 
-### Phase 4 — Saturday Night (4h): Unified Demo
-- Combine identity + trust + payments in one flow
-- Add minimal UI or CLI for “discover → call → pay”
-- Add architecture diagram and final README
+### Phase 2 — ENS Identity + Discovery (Saturday AM, ~4h)
+**Goal:** provider can be found and called through ENS metadata.
 
-### Phase 5 — Sunday (4h): Submission Polish
-- Record short demo video
-- Ensure repo instructions run cleanly
-- Prepare sponsor-specific explanation snippets
+- Implement subname registration helper under configured `ENS_PARENT`.
+- Implement metadata writer with required AgentGate text keys.
+- Implement read/discovery helper used by consumer flow.
+- Ensure demo uses ENS-derived endpoint rather than hardcoded URL.
 
-## Acceptance Criteria
-- Agent can discover another agent via ENS.
-- Verified human-backed agent gets initial free calls.
-- After free calls, same endpoint enforces x402 payment.
-- Payment settles via Arc path in USDC.
-- Live demo clearly shows all three sponsor integrations as core, not cosmetic.
+### Phase 3 — World Trust Gate (Saturday PM, ~4h)
+**Goal:** trust controls free-trial eligibility before payments.
 
-## Risks + Mitigations
-- **Risk:** Cross-chain complexity (ENS + Arc + World) slows progress  
-  **Mitigation:** Keep ENS + World verification/read path lightweight, keep payments only on Arc.
-- **Risk:** Time lost on optional extras  
-  **Mitigation:** Prioritize one polished end-to-end path over multiple half-built features.
-- **Risk:** Demo fragility  
-  **Mitigation:** Script deterministic demo wallets, fixed endpoints, and fallback CLI mode.
+- Integrate World AgentKit verification input to server request context.
+- Add free-trial counter (small local store is acceptable for demo determinism).
+- Enforce: verified users get N free calls; after N, x402 required.
+- Surface clear response states: `trial_remaining`, then `payment_required`.
 
-## Final Deliverables
-- Public GitHub repo
-- Working demo (live or local reproducible)
-- Demo video
-- Architecture diagram
-- Clear sponsor mapping in README (Arc + ENS + World)
+### Phase 4 — Unified Demo and UX (Saturday Night, ~4h)
+**Goal:** one command-driven flow that is hard to break live.
+
+- Wire demo script(s): `register -> discover -> call (free) -> call (paid)`.
+- Keep logs concise and sponsor-mapped (ENS, World, Arc evidence lines).
+- Add fallback local mode if one external dependency degrades.
+- Add architecture diagram and tighten README runbook.
+
+### Phase 5 — Submission Polish (Sunday, ~4h)
+**Goal:** maximize judge clarity, reduce demo risk.
+
+- Record demo video with deterministic sequence and pre-funded wallets.
+- Add sponsor checklist section to README (where each requirement is shown).
+- Final smoke run from clean install and env setup.
+
+## Package-Level Definition of Done
+
+### `@agentgate/sdk`
+- `identity`: real ENS read/write/discovery path
+- `payments`: real x402/Arc client methods for buyer-side calls
+- `trust`: World verification helper integrated into request flow
+- `index.ts`: exports stable, high-level APIs only
+
+### `@agentgate/server`
+- `/call` supports trial + paid transitions
+- x402 middleware emits proper `402` and validates payment data
+- Errors are explicit and demo-readable (no silent fallbacks)
+
+### `agentgate-demo`
+- Runnable script(s) proving complete product story
+- No manual code edits required during live demo
+- Clear output for each sponsor integration checkpoint
+
+## Acceptance Criteria (Ship Gate)
+- Agent discovery works via ENS name + metadata.
+- Verified user receives configured free-trial calls.
+- Trial exhaustion triggers payment requirement on same endpoint.
+- Paid request succeeds through Arc/x402 flow in USDC.
+- Demo clearly proves Arc + ENS + World are core to the same flow.
+
+## Risks and Mitigations
+| Risk | Likelihood | Impact | Mitigation |
+|---|---:|---:|---|
+| External SDK/API instability during event | Medium | High | Build deterministic fallback mode and preflight checks before demo |
+| Cross-network confusion (ENS network vs Arc network) | Medium | High | Pin env vars, document chain IDs, avoid dynamic network switching in demo |
+| Last-minute integration bugs across packages | Medium | Medium | Keep one golden path only; avoid extra endpoints/features |
+| Time loss on non-judged polish | High | Medium | Prioritize acceptance criteria before UI niceties |
+
+## Demo Ops Checklist
+- Pre-fund demo wallets and verify balances
+- Confirm all required env vars from `.env.example`
+- Start server and run scripted demo once before recording
+- Capture transaction / response evidence for sponsor claims
+- Keep backup recording and fallback script ready
 
 ## Useful Resources
 
-### Arc (Circle)
+### Arc / Circle / x402
 - Arc docs: https://docs.arc.io/
-- Circle Gateway nanopayments: https://developers.circle.com/gateway/nanopayments.md
-- x402 foundation repo: https://github.com/x402-foundation/x402
-- Arc faucet: https://faucet.circle.com
-- Arc explorer: https://testnet.arcscan.app
+- Circle nanopayments: https://developers.circle.com/gateway/nanopayments.md
+- x402 reference: https://github.com/x402-foundation/x402
 
 ### ENS
 - ENS docs: https://docs.ens.domains/
-- ENS deployments (contract addresses): https://docs.ens.domains/learn/deployments
-- ENS SDK (`ensjs`): https://github.com/ensdomains/ensjs
-- ENS Sepolia app: https://sepolia.app.ens.domains/
+- ENS deployments: https://docs.ens.domains/learn/deployments
+- ENS SDK: https://github.com/ensdomains/ensjs
 
 ### World
-- World docs: https://docs.world.org/
-- AgentKit integration guide: https://docs.world.org/agents/agent-kit/integrate
-- AgentKit SDK reference: https://docs.world.org/agents/agent-kit/sdk-reference
+- World AgentKit integration: https://docs.world.org/agents/agent-kit/integrate
+- World AgentKit SDK reference: https://docs.world.org/agents/agent-kit/sdk-reference
 - AgentBook: https://agentbook.world
 
-### Quick constants
+## Quick Constants (Verify Before Final Submission)
 - Arc testnet chain ID: `5042002`
 - Arc RPC: `https://rpc.testnet.arc.network`
 - Arc USDC: `0x3600000000000000000000000000000000000000`

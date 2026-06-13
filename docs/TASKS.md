@@ -1,98 +1,187 @@
-# AgentGate - Task Breakdown
+# AgentGate — Task Breakdown
 
-This document outlines the specific tasks required to complete the AgentGate project for ETHGlobal 2026. Tasks are grouped logically to facilitate parallel development where possible.
+Granular, actionable tasks for the ETHGlobal 2026 build. See `docs/PLAN.md` for strategy, acceptance criteria, and resources.
 
-## Phase 1: Foundation & Project Setup
+---
 
-*Goal: Establish the monorepo structure, tooling, and core dependencies.*
+## Phase 1: Foundation & Wallet Setup
 
-- [ ] **Task 1.1: Monorepo Scaffold**
-  - Initialize a new Node.js monorepo (using Yarn workspaces, npm workspaces, or pnpm).
-  - Configure base `package.json` with scripts for building and testing across workspaces.
-  - Setup TypeScript configuration (`tsconfig.json` base).
-  - Setup basic linting/formatting (ESLint/Prettier).
-- [ ] **Task 1.2: Package Initialization**
-  - Initialize `packages/sdk` package.
-  - Initialize `packages/server` package.
-  - Initialize `demo` package.
-- [ ] **Task 1.3: Arc Testnet Setup**
-  - Create and fund Arc testnet wallets for testing (Buyer and Seller wallets). See [Arc docs](https://docs.arc.io/) and [Arc faucet](https://faucet.circle.com).
-  - Document the wallet addresses and private keys (in `.env.example` or local secure storage). Use [Arc RPC](https://rpc.testnet.arc.network) and chain ID `5042002`.
+*Goal: Monorepo scaffold + funded Arc testnet wallets ready for integration work.*
 
-## Phase 2: Core SDK Development (Parallelizable)
+- [x] **Task 1.1: Monorepo Scaffold**
+  - npm workspaces (`packages/*`, `demo`), root `tsconfig.json`, ESLint/Prettier config.
+  - Root scripts: `build`, `lint`, `test`, `format`.
 
-*Goal: Build the client-side wrappers for Payments, Identity, and Trust. These can be developed somewhat independently.*
+- [x] **Task 1.2: Package Initialization**
+  - `packages/sdk` — stub modules (`identity.ts`, `payments.ts`, `trust.ts`), re-exported via `index.ts`.
+  - `packages/server` — Express server with `GET /`, `POST /call`, x402 middleware stub.
+  - `demo` — placeholder entrypoint referencing SDK.
 
-### 2A: Payments (Arc / x402)
-- [ ] **Task 2A.1: x402 Client Setup**
-  - Install `@circle-fin/x402-batching` in `packages/sdk`.
-  - Create the x402 buyer wrapper (`agentgate.fetch` or similar). See [x402 foundation repo](https://github.com/x402-foundation/x402) and the [Circle nanopayments guide](https://developers.circle.com/gateway/nanopayments.md).
-  - Implement logic for the initial USDC deposit (Arc USDC: `0x3600000000000000000000000000000000000000`).
-  - Implement offchain authorization signing for per-call micropayments.
+- [ ] **Task 1.3: Arc Testnet Wallets** *(in progress)*
+  - Create two wallets: **Buyer** (consumer agent) and **Seller** (provider agent).
+  - Fund both with testnet ETH + USDC via [Arc faucet](https://faucet.circle.com).
+  - Add wallet addresses and private key placeholders to `.env.example`.
+  - Verify balances via [Arc explorer](https://testnet.arcscan.app) or RPC call.
 
-### 2B: Identity (ENS)
-- [ ] **Task 2B.1: ENS Configuration**
-  - Determine parent ENS name strategy (e.g., testnet deployment or using an existing Sepolia name). See [ENS docs](https://docs.ens.domains/) and [ENS deployments](https://docs.ens.domains/learn/deployments).
-  - Install `@ensdomains/ensjs` in `packages/sdk` (see [ensjs](https://github.com/ensdomains/ensjs)).
-- [ ] **Task 2B.2: Registration SDK**
-  - Implement function to programmatically create subnames (e.g., `[name].agentgate.eth`). Use the [ENS Sepolia app](https://sepolia.app.ens.domains/) for manual testing.
-  - Implement metadata text record writer (`description`, `io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`).
-- [ ] **Task 2B.3: Discovery SDK**
-  - Implement function to resolve subnames and read text records.
-  - (Optional but recommended) Implement discovery query (e.g., via subgraph) to list available agents under the parent name.
+- [ ] **Task 1.4: Environment Config Module**
+  - Create a shared config loader (e.g., `packages/sdk/src/config.ts` or root-level) using `dotenv`.
+  - Load and validate: `RPC_URL`, `ARC_RPC_URL`, `DEMO_PRIVATE_KEY`, `ARC_API_KEY`, `WORLD_API_KEY`, `ENS_PARENT`.
+  - Fail fast with clear error messages on missing required vars.
+  - Wire into both SDK and server packages.
 
-### 2C: Trust (World AgentKit)
-- [ ] **Task 2C.1: AgentKit Setup**
-  - Install `@worldcoin/agentkit` in `packages/sdk`. See [World docs](https://docs.world.org/) and the [AgentKit integration guide](https://docs.world.org/agents/agent-kit/integrate).
-- [ ] **Task 2C.2: Trust SDK**
-  - Implement AgentKit request wrapper on the consumer side (see [AgentKit SDK reference](https://docs.world.org/agents/agent-kit/sdk-reference)).
-  - Implement logic to register an agent wallet in the [AgentBook](https://agentbook.world).
+---
 
-## Phase 3: Agent Endpoint Server Development
+## Phase 2: Core SDK Development
 
-*Goal: Build the communication endpoint for the AI agent that handles direct agent-to-agent requests, enforces payments, and verifies World identity/free trials.*
+*Goal: Replace stubs with real integration code. Tracks 2A/2B/2C are parallelizable.*
 
-- [ ] **Task 3.1: Server Scaffold**
-  - Setup a basic Express/Fastify server in `packages/server` to act as the agent's receiving endpoint.
-- [ ] **Task 3.2: x402 Middleware**
-  - Implement x402 seller middleware for incoming agent requests. Reference the [x402 repo](https://github.com/x402-foundation/x402) and [Circle nanopayments guide](https://developers.circle.com/gateway/nanopayments.md).
-  - Enforce payment requirements (return HTTP 402 if payment is invalid/missing).
-  - Validate and process Arc nanopayment settlements (use the [Arc explorer](https://testnet.arcscan.app) for debugging).
-- [ ] **Task 3.3: Identity & Free-Trial Logic (World Integration)**
-  - Integrate Server-side AgentKit free-trial extension hooks (see the [AgentKit integration guide](https://docs.world.org/agents/agent-kit/integrate)).
-  - Implement state tracking (e.g., in-memory or lightweight DB) to track usage per verified human.
-  - Configure logic: Allow 3-5 free uses, then fallback to requiring the x402 payment path.
+### 2A: Payments — x402 + Arc
 
-## Phase 4: Integration & Demo Application
+- [ ] **Task 2A.1: x402 Buyer Client**
+  - Research the correct x402 client package (check [`x402` repo](https://github.com/x402-foundation/x402) for the canonical TS client — may be `x402` or `@x402/client`, not `@circle-fin/x402-batching`).
+  - Install the package in `packages/sdk`.
+  - Replace `PaymentsClient` stub with a wrapper that creates an x402-enabled fetch/client bound to the buyer wallet and Arc RPC.
 
-*Goal: Combine all pieces into a working end-to-end demonstration.*
+- [ ] **Task 2A.2: Buyer Deposit Flow**
+  - Implement USDC deposit (or approval) to the x402 payment channel / GatewayWallet (`0x0077777d7EBA4688BDeF3E311b846F25870A19B9`).
+  - Use Arc USDC token at `0x3600000000000000000000000000000000000000`.
+  - Expose a `deposit(amount)` method returning a tx hash.
 
-- [ ] **Task 4.1: Provider Agent Setup (Demo)**
-  - Create a script in `demo` to start the provider agent's server.
-  - Ensure the agent registers its identity via ENS (Task 2B) and AgentBook (Task 2C) on startup.
-- [ ] **Task 4.2: Consumer Agent CLI/UI (Demo)**
-  - Create a minimal CLI or UI in `demo` representing the "Consumer Agent" that wants to interact with another agent.
-  - Implement the "Discover" step: Find the provider agent via ENS (see [ENS docs](https://docs.ens.domains/) and [ensjs](https://github.com/ensdomains/ensjs)).
-  - Implement the "Call" step (Trust Gate): Attempt a direct free call using World AgentKit identity proof (see [AgentKit integration guide](https://docs.world.org/agents/agent-kit/integrate)).
-  - Implement the "Pay" step: Fallback to the x402 nanopayment flow for direct value exchange when the trial runs out (see [x402 foundation repo](https://github.com/x402-foundation/x402)).
-- [ ] **Task 4.3: End-to-End Validation**
-  - Run the full loop: Register -> Discover -> Free Call -> Paid Call -> Settlement.
-  - Fix bugs and edge cases.
+- [ ] **Task 2A.3: Per-Call Payment Authorization**
+  - Implement offchain micropayment signing per the x402 protocol.
+  - Expose a method (e.g., `payForCall(endpoint, price)`) that returns the correct `X-402-Authorization` header value.
+  - Write a minimal test script that signs an authorization and logs the header.
+
+### 2B: Identity — ENS
+
+- [ ] **Task 2B.1: ENS Parent Name Setup**
+  - Decide testnet strategy: register `agentgate.eth` on Sepolia or use an existing test name.
+  - Confirm `@ensdomains/ensjs` (already installed `^3.3.0`) works with chosen network.
+  - Create a viem/ethers provider wired to `RPC_URL` for ENS operations.
+
+- [ ] **Task 2B.2: Subname Registration**
+  - Replace `registerSubname()` stub in `identity.ts` with real `ensjs` subname creation.
+  - Accept: parent name, label, owner address, signer.
+  - Return the created subname string and tx hash.
+
+- [ ] **Task 2B.3: Metadata Writer**
+  - Implement `setAgentMetadata(name, records, signer)` that writes text records:
+    - `description`, `io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`.
+  - Batch writes in a single transaction where possible.
+
+- [ ] **Task 2B.4: Discovery / Resolver**
+  - Replace `readTextRecords()` stub with real ENS text record resolution.
+  - Add `discoverAgents(parent)` that lists known subnames (via subgraph or enumeration).
+  - Return structured metadata objects, not raw strings.
+
+### 2C: Trust — World AgentKit
+
+- [ ] **Task 2C.1: AgentKit Package Setup**
+  - Install `@worldcoin/agentkit` in `packages/sdk`.
+  - Create AgentKit client instance with env-provided `WORLD_API_KEY`.
+
+- [ ] **Task 2C.2: Agent Wallet Registration**
+  - Replace `registerAgentWallet()` stub with real AgentBook registration call.
+  - Accept wallet address, return registration status.
+  - Handle already-registered case gracefully.
+
+- [ ] **Task 2C.3: Verification Proof Request**
+  - Replace `requestWorldProof()` stub with real AgentKit proof request flow.
+  - Return a structured proof object that the server can validate.
+  - Include the proof in outgoing request headers (e.g., `X-World-Proof`).
+
+---
+
+## Phase 3: Server — Payment Gate + Trust Gate
+
+*Goal: Server enforces the full trust → trial → payment flow on `POST /call`.*
+
+- [ ] **Task 3.1: x402 Seller Middleware**
+  - Replace the header-presence stub in `x402Middleware.ts` with real x402 payment validation.
+  - Install seller-side x402 package if separate from buyer (check [x402 repo](https://github.com/x402-foundation/x402)).
+  - On missing/invalid payment: return HTTP `402` with a proper x402 challenge body (price, token, payee address).
+  - On valid payment: attach payment metadata to `req` and call `next()`.
+
+- [ ] **Task 3.2: Seller Wallet + Pricing Config**
+  - Load seller wallet from env (`SELLER_PRIVATE_KEY` or similar).
+  - Define pricing config for `/call` (e.g., `{ price: "0.001", token: "USDC", network: "arc-testnet" }`).
+  - Expose pricing info on a `GET /price` or include in 402 challenge response.
+
+- [ ] **Task 3.3: World Proof Verification**
+  - Add middleware or route-level logic to extract and verify `X-World-Proof` header using AgentKit server-side SDK.
+  - On valid proof: attach verified identity (e.g., wallet address or agent ID) to request context.
+  - On missing proof: skip (allow anonymous paid access) or reject depending on config.
+
+- [ ] **Task 3.4: Free-Trial Counter**
+  - Implement in-memory store keyed by verified identity (from Task 3.3).
+  - Track call count per identity per endpoint.
+  - Config: `FREE_TRIAL_LIMIT` (default 5).
+  - Logic: if verified + under limit → allow free; if verified + over limit → require x402; if unverified → require x402.
+
+- [ ] **Task 3.5: Unified Request Flow**
+  - Wire middleware chain on `POST /call`: World proof check → trial counter → x402 gate.
+  - Return clear response states:
+    - `{ status: "free_trial", remaining: N }` for trial calls.
+    - `{ status: "paid", tx: "..." }` for paid calls.
+    - HTTP 402 with challenge body when payment is required but missing.
+  - Add a real agent response payload (even if trivial, e.g., echo or mock AI response).
+
+---
+
+## Phase 4: Demo — End-to-End Flow
+
+*Goal: Scripted demo that proves the full product story with no manual code edits.*
+
+- [ ] **Task 4.1: Provider Startup Script**
+  - Create `demo/src/provider.ts`: starts server, registers ENS subname + metadata, registers wallet in AgentBook.
+  - Log each step clearly with sponsor attribution (e.g., `[ENS] Registered my-agent.agentgate.eth`).
+  - Handle errors gracefully (e.g., "already registered" is not fatal).
+
+- [ ] **Task 4.2: Consumer Discovery Script**
+  - Create `demo/src/consumer.ts` step 1: discover provider agent via ENS.
+  - Resolve endpoint URL and pricing from ENS text records.
+  - Log discovered metadata.
+
+- [ ] **Task 4.3: Consumer Free-Call Flow**
+  - In `consumer.ts` step 2: present World proof and make free trial calls.
+  - Log trial remaining count from each response.
+  - Show the transition point where trial is exhausted.
+
+- [ ] **Task 4.4: Consumer Paid-Call Flow**
+  - In `consumer.ts` step 3: after trial exhaustion, make a paid call using x402.
+  - Sign payment authorization, attach header, call endpoint.
+  - Log payment confirmation and response.
+
+- [ ] **Task 4.5: Full Demo Runner**
+  - Create `demo/src/run.ts` or npm script that orchestrates: start provider → run consumer flow.
+  - Add `npm --workspace agentgate-demo run demo` script.
+  - Ensure deterministic output suitable for recording.
+  - Add a local fallback mode if external services are degraded.
+
+---
 
 ## Phase 5: Polish & Submission
 
-*Goal: Prepare everything for the hackathon submission.*
+*Goal: Maximize judge clarity, minimize demo risk.*
 
-- [ ] **Task 5.1: Documentation & README Polish**
-  - Finalize `README.md` with concrete instructions on how to run the demo locally.
-  - Ensure architecture diagrams are up-to-date.
+- [ ] **Task 5.1: README Finalization**
+  - Rewrite Getting Started with exact commands: install → env setup → build → run demo.
+  - Add sponsor integration table mapping each prize to specific code paths.
+  - Update architecture diagram if flow changed.
+
 - [ ] **Task 5.2: Demo Video**
-  - Record a 2-3 minute video showing the end-to-end flow.
-  - Ensure the UI/CLI output clearly demonstrates ENS discovery, World free-trial, and Arc settlement.
-- [ ] **Task 5.3: Sponsor Submission Snippets**
-  - Write short explanations specifically targeting the Arc, ENS, and World sponsor tracks.
-- [ ] **Task 5.4: Final Review**
-  - Check against Acceptance Criteria in `PLAN.md`.
-  - Ensure repo is public and code is clean.
+  - Record 2–3 minute video showing the end-to-end flow.
+  - Narrate each step with sponsor call-outs (ENS discovery, World verification, Arc payment).
+  - Use pre-funded wallets with verified balances.
 
-(See `docs/PLAN.md` for the full plan, acceptance criteria, and additional context.)
+- [ ] **Task 5.3: Sponsor Submission Writeups**
+  - Arc: emphasize x402 nanopayments, USDC settlement, gasless UX.
+  - ENS: emphasize programmatic subname registration, metadata-driven discovery.
+  - World: emphasize human-backed trust, free-trial gating, AgentKit integration.
+
+- [ ] **Task 5.4: Pre-Submission Checklist**
+  - Verify all acceptance criteria from `PLAN.md`.
+  - Clean install + build from scratch succeeds.
+  - All env vars documented in `.env.example`.
+  - No secrets committed (audit `.gitignore`).
+  - Repo is public and README links work.
