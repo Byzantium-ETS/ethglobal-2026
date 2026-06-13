@@ -1,17 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { PaymentsClient } from '../src/payments';
-import * as dotenv from 'dotenv';
-import { resolve } from 'path';
-
-// Load env vars
-dotenv.config({ path: resolve(__dirname, '../../../.env') });
+import { config } from '../src/config';
 
 const hasEnv = !!(process.env.DEMO_PRIVATE_KEY && process.env.ARC_RPC_URL);
 
 describe.skipIf(!hasEnv)('PaymentsClient - Buyer Deposit Flow (Integration)', () => {
   it('should successfully fetch balances and initiate a deposit', async () => {
-    const privateKey = process.env.DEMO_PRIVATE_KEY as `0x${string}`;
-    const rpcUrl = process.env.ARC_RPC_URL;
+    const privateKey = config.keys.privateKey as `0x${string}`;
+    const rpcUrl = config.rpc.arc;
 
     const client = new PaymentsClient({
       privateKey,
