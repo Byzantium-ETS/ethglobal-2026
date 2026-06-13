@@ -1,0 +1,19 @@
+{
+  "name": "@agentgate/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "echo \"no tests\" && exit 0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" || true"
+  },
+  "dependencies": {
+    "@ensdomains/ensjs": "^3.3.0",
+    "ethers": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0"
+  }
+}

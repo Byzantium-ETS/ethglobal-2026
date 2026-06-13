@@ -1,0 +1,63 @@
+{
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["vtsls"],
+    },
+    "TSX": {
+      "language_servers": ["vtsls"],
+    },
+    "JavaScript": {
+      "language_servers": ["vtsls"],
+    },
+  },
+  "formatter": "language_server",
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": {
+          "tsserver": { "maxTsServerMemory": 16184 },
+          "inlayHints": {
+            "parameterNames": { "enabled": "all", "suppressWhenArgumentMatchesName": false },
+            "parameterTypes": { "enabled": true },
+            "variableTypes": { "enabled": true, "suppressWhenTypeMatchesName": true },
+            "propertyDeclarationTypes": { "enabled": true },
+            "functionLikeReturnTypes": { "enabled": true },
+            "enumMemberValues": { "enabled": true },
+          },
+          "implementationsCodeLens": {
+            "enabled": true,
+            "showOnAllClassMethods": true,
+            "showOnInterfaceMethods": true,
+          },
+          "referencesCodeLens": { "enabled": true, "showOnAllFunctions": true },
+        },
+        "javascript": {
+          "tsserver": { "maxTsServerMemory": 16184 },
+          "inlayHints": {
+            "parameterNames": { "enabled": "all", "suppressWhenArgumentMatchesName": false },
+            "parameterTypes": { "enabled": true },
+            "variableTypes": { "enabled": true, "suppressWhenTypeMatchesName": true },
+            "propertyDeclarationTypes": { "enabled": true },
+            "functionLikeReturnTypes": { "enabled": true },
+            "enumMemberValues": { "enabled": true },
+          },
+        },
+      },
+    },
+
+    "typescript-language-server": {
+      "initialization_options": {
+        "preferences": {
+          "includeInlayParameterNameHints": "all",
+          "includeInlayParameterNameHintsWhenArgumentMatchesName": true,
+          "includeInlayFunctionParameterTypeHints": true,
+          "includeInlayVariableTypeHints": true,
+          "includeInlayVariableTypeHintsWhenTypeMatchesName": true,
+          "includeInlayPropertyDeclarationTypeHints": true,
+          "includeInlayFunctionLikeReturnTypeHints": true,
+          "includeInlayEnumMemberValueHints": true,
+        },
+      },
+    },
+  },
+}
