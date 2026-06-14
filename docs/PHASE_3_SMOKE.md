@@ -13,7 +13,7 @@ The checks below keep local CI deterministic while still providing explicit live
 The current provider server reads these headers:
 
 | Concern | Header | Source |
-|---|---|---|
+| --- | --- | --- |
 | World trust | `agentkit` | `@worldcoin/agentkit` `createAgentkitClient().createHeader(...)` |
 | x402 payment | `payment-signature` | `@x402/fetch` / Circle Gateway x402 client flow |
 | x402 payment fallback | `x-payment` | Alternate x402 payment header accepted by the middleware |
@@ -43,7 +43,7 @@ npm run smoke:world
 - real AgentKit payload parsing, freshness validation, and EIP-191 signature verification
 - server free-trial decrement through the real `worldMiddleware`
 
-The only mocked piece in `smoke:world` is AgentBook lookup. Tasks 2C.2 and 2C.3 are still teammate-owned, so local CI maps the verified signer address to `human-smoke` without replacing the SDK trust implementation.
+The only mocked piece in `smoke:world` is AgentBook lookup. Local CI maps the verified signer address to `human-smoke` so the trust path stays deterministic; live AgentBook status is covered by the SDK trust integration checks.
 
 GitHub Actions runs both checks in [`.github/workflows/phase-3-smoke.yml`](../.github/workflows/phase-3-smoke.yml) by installing Foundry, starting Anvil, building the workspaces, and executing the scripts.
 
@@ -113,4 +113,6 @@ The demo entrypoint is:
 npm --workspace agentgate-demo run start
 ```
 
-It performs provider setup probing, optional ENS discovery, optional free calls with a supplied `DEMO_AGENTKIT_HEADER`, and an optional paid call with `RUN_DEMO_PAID_CALL=true`. Until 2C.2 and 2C.3 land, generate the real AgentKit header outside the SDK trust module or use `npm run smoke:world` for the deterministic trust path.
+It performs provider setup probing, optional ENS discovery, optional free calls with SDK-generated AgentKit headers, and an optional paid call with `RUN_DEMO_PAID_CALL=true`.
+
+Set `RUN_DEMO_FREE_CALLS=true` to have the demo call `requestWorldProof()` and send the returned value as the `agentkit` header. `DEMO_AGENTKIT_HEADER` or `AGENTKIT_HEADER` can still override the generated header for debugging.
