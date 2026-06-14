@@ -24,7 +24,7 @@ export type AgentMetadataValue = string | boolean | readonly string[];
 export type AgentMetadataRecords = Partial<Record<AgentGateTextKey, AgentMetadataValue>>;
 
 export interface RegisterSubnameOptions {
-  /** RPC endpoint for the ENS network. Defaults to `RPC_URL` from config. */
+  /** RPC endpoint for the ENS network. Defaults to `ENS_RPC_URL` from config. */
   rpcUrl?: string;
   /** ENS-enabled viem chain. When omitted, the chain is detected from `rpcUrl`. */
   chain?: Chain;
@@ -33,7 +33,7 @@ export interface RegisterSubnameOptions {
 }
 
 export interface ReadTextRecordOptions {
-  /** RPC endpoint for the ENS network. Defaults to `RPC_URL` from config. */
+  /** RPC endpoint for the ENS network. Defaults to `ENS_RPC_URL` from config. */
   rpcUrl?: string;
   /** ENS-enabled viem chain. When omitted, the chain is detected from `rpcUrl`. */
   chain?: Chain;
@@ -232,7 +232,7 @@ export async function registerSubname(
   }
 
   const rpcUrl = options.rpcUrl ?? config.rpc.standard;
-  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set ENS_RPC_URL or pass options.rpcUrl.');
 
   const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
@@ -312,7 +312,7 @@ export async function setAgentMetadata(
   }
 
   const rpcUrl = options.rpcUrl ?? config.rpc.standard;
-  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set ENS_RPC_URL or pass options.rpcUrl.');
 
   const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
@@ -360,7 +360,7 @@ export async function readTextRecords(name: string, options: ReadTextRecordOptio
   const normalizedName = normalizeEnsName(name);
 
   const rpcUrl = options.rpcUrl ?? config.rpc.standard;
-  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set ENS_RPC_URL or pass options.rpcUrl.');
 
   const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
   const ensPublicClient = createEnsPublicClient({ chain, transport: http(rpcUrl) });
@@ -404,7 +404,7 @@ export async function discoverAgents(
 ): Promise<AgentMetadata[]> {
   const normalizedParent = normalizeParentName(parentName);
   const rpcUrl = options.rpcUrl ?? config.rpc.standard;
-  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set RPC_URL or pass options.rpcUrl.');
+  if (!rpcUrl) throw new Error('[ENS Identity] Missing RPC URL. Set ENS_RPC_URL or pass options.rpcUrl.');
 
   const chain = addEnsContracts(await resolveEnsChain(options.chain, rpcUrl));
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });

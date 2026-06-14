@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const rpcUrl = required('RPC_URL');
+  const rpcUrl = required('ENS_RPC_URL');
   const parentName = required('ENS_PARENT');
   const account = privateKeyToAccount(normalizePrivateKey(required('DEMO_PRIVATE_KEY')));
   const chain = addEnsContracts(await detectTestnetChain(rpcUrl));

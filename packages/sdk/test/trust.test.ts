@@ -36,7 +36,7 @@ vi.mock('../src/config', () => ({
   },
 }));
 
-const { createAgentWallet, verifyAgentWalletRegistration, requestWorldProof } = await import('../src/trust');
+const { createAgentWallet, verifyAgentWalletRegistration, requestWorldProof, fetchWithWorldTrust } = await import('../src/trust');
 
 describe('trust.createAgentWallet', () => {
   beforeEach(() => {
@@ -194,6 +194,34 @@ describe('trust.requestWorldProof', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       '[AgentKit] Failed to generate World Proof:',
       expect.any(Error),
+    );
+  });
+});
+
+describe('trust.fetchWithWorldTrust', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls AgentKit fetch for trust-aware requests', async () => {
+    const response = new Response(JSON.stringify({ ok: true }), { status: 200 });
+    const agentFetch = vi.fn().mockResolvedValue(response);
+    mocks.privateKeyToAccount.mockReturnValue({
+      address: '0x1111111111111111111111111111111111111111',
+      signMessage: vi.fn().mockResolvedValue('0xsigned'),
+    });
+    mocks.createAgentkitClient.mockReturnValue({ fetch: agentFetch, createHeader: vi.fn() });
+
+    const result = await fetchWithWorldTrust('https://provider.example/call', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt: 'hello' }),
+    });
+
+    expect(result).toBe(response);
+    expect(agentFetch).toHaveBeenCalledWith(
+      'https://provider.example/call',
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });

@@ -11,7 +11,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env'), quiet: true });
 
 // Define the exact keys from your .env.example
 const REQUIRED_ENV_VARS = [
-  'RPC_URL',
+  'ENS_RPC_URL',
   'DEMO_PRIVATE_KEY',
   'ARC_API_KEY',
   'ARC_RPC_URL',
@@ -64,7 +64,7 @@ export const config = {
   get rpc() {
     const env = getValidatedEnv();
     return {
-      standard: env.RPC_URL,
+      standard: env.ENS_RPC_URL,
       arc: env.ARC_RPC_URL,
       world: env.WORLD_RPC_URL,
     };
@@ -97,10 +97,10 @@ export const config = {
 
 /**
  * Returns viem clients (public/wallet) and ENS-specific clients from @ensdomains/ensjs,
- * wired to the RPC_URL and DEMO_PRIVATE_KEY from the environment via config.
+ * wired to the ENS_RPC_URL and DEMO_PRIVATE_KEY from the environment via config.
  *
  * This is the implementation of the requirement:
- * "Create a viem/ethers provider wired to RPC_URL for ENS operations."
+ * "Create a viem/ethers provider wired to ENS_RPC_URL for ENS operations."
  *
  * - Auto-detects chain (Sepolia vs mainnet) from the RPC URL string.
  * - The wallet client is pre-configured with the account from the private key.
@@ -109,7 +109,7 @@ export const config = {
  */
 function getChain(rpcUrl: string) {
   // Prefer explicit ENS_CHAIN for reliable detection (avoids brittle string matching on custom RPC URLs).
-  // Falls back to RPC_URL heuristic for backward compatibility.
+  // Falls back to ENS_RPC_URL heuristic for backward compatibility.
   const chainName = (process.env.ENS_CHAIN || '').toLowerCase();
   if (chainName === 'sepolia') return sepolia;
   if (chainName === 'mainnet') return mainnet;

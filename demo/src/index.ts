@@ -1,4 +1,4 @@
-import { discoverAgents, PaymentsClient, type AgentMetadata } from '@agentgate/sdk';
+import { discoverAgents, fetchWithWorldTrust, PaymentsClient, type AgentMetadata } from '@agentgate/sdk';
 
 type JsonResponse<T = unknown> = {
 	status: number;
@@ -33,7 +33,7 @@ async function checkProvider(providerUrl: string): Promise<void> {
 
 async function discoverProvider(providerUrl: string): Promise<AgentMetadata> {
 	const ensParent = env('ENS_PARENT');
-	const rpcUrl = env('RPC_URL');
+	const rpcUrl = env('ENS_RPC_URL');
 
 	if (env('RUN_DEMO_DISCOVERY') === 'true' && ensParent && rpcUrl) {
 		const agents = await discoverAgents(ensParent, { rpcUrl });
@@ -57,20 +57,13 @@ async function discoverProvider(providerUrl: string): Promise<AgentMetadata> {
 }
 
 async function runFreeCalls(callUrl: string): Promise<void> {
-	const agentkitHeader = env('DEMO_AGENTKIT_HEADER') ?? env('AGENTKIT_HEADER');
 	const attempts = Number(env('DEMO_FREE_CALLS') ?? '2');
 
-	if (!agentkitHeader) {
-		console.log('[demo] free calls skipped: provide DEMO_AGENTKIT_HEADER from the real AgentKit client once 2C.2/2C.3 land');
-		return;
-	}
-
 	for (let attempt = 1; attempt <= attempts; attempt += 1) {
-		const response = await readJson(await fetch(callUrl, {
+		const response = await readJson(await fetchWithWorldTrust(callUrl, {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				agentkit: agentkitHeader,
 			},
 			body: JSON.stringify({ prompt: `free demo call ${attempt}` }),
 		}));

@@ -7,7 +7,7 @@ let requestWorldProof: typeof import('../src/trust').requestWorldProof;
 
 beforeAll(async () => {
   // Ensure config validation passes in local/CI runs without requiring private secrets.
-  process.env.RPC_URL = process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com';
+  process.env.ENS_RPC_URL = process.env.ENS_RPC_URL || 'https://ethereum-sepolia.publicnode.com';
   process.env.DEMO_PRIVATE_KEY =
     process.env.DEMO_PRIVATE_KEY ||
     `0x${'59c6995e'.repeat(8)}`;

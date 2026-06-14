@@ -4,7 +4,7 @@
  * Usage:
  *   npm run verify:ens
  *
- * This runs createEnsPublicClient from @ensdomains/ensjs against your RPC_URL.
+ * This runs createEnsPublicClient from @ensdomains/ensjs against your ENS_RPC_URL.
  */
 
 import * as dotenv from 'dotenv';
@@ -19,20 +19,20 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 async function main() {
   const ensParent = process.env.ENS_PARENT || 'agentgate.eth';
-  const rpcUrl = process.env.RPC_URL;
+  const rpcUrl = process.env.ENS_RPC_URL;
   const demoPrivateKey = process.env.DEMO_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000001';
 
   if (!rpcUrl || rpcUrl.includes('example')) {
     console.log('=== AgentGate ENS Parent Verification (Task 2B.1) ===\n');
-    console.error('❌ RPC_URL is still the placeholder in .env');
+    console.error('❌ ENS_RPC_URL is still the placeholder in .env');
     console.error('   Please set it to a real Sepolia RPC, e.g.:');
-    console.error('   RPC_URL="https://ethereum-sepolia.publicnode.com"');
+    console.error('   ENS_RPC_URL="https://ethereum-sepolia.publicnode.com"');
     process.exit(1);
   }
 
   console.log('=== AgentGate ENS Parent Verification (Task 2B.1) ===\n');
   console.log(`ENS_PARENT     : ${ensParent}`);
-  console.log(`RPC_URL        : ${rpcUrl}`);
+  console.log(`ENS_RPC_URL    : ${rpcUrl}`);
 
   try {
     const demoAddress = privateKeyToAccount(demoPrivateKey as `0x${string}`).address;
@@ -43,7 +43,7 @@ async function main() {
 
   // Detect chain
   // Prefer explicit ENS_CHAIN for reliable detection (avoids brittle string matching on custom RPC URLs).
-  // Falls back to RPC_URL heuristic for backward compatibility.
+  // Falls back to ENS_RPC_URL heuristic for backward compatibility.
   const chainName = (process.env.ENS_CHAIN || '').toLowerCase();
   const chain = chainName === 'sepolia' ? sepolia : (chainName === 'mainnet' ? mainnet : (rpcUrl.toLowerCase().includes('sepolia') ? sepolia : mainnet));
 
@@ -85,7 +85,7 @@ async function main() {
     console.error('\n❌ ENS query failed:');
     console.error(error?.message || error);
     console.log('\nCommon causes:');
-    console.log('- Wrong RPC_URL (must be Sepolia Ethereum RPC, not Arc)');
+    console.log('- Wrong ENS_RPC_URL (must be Sepolia Ethereum RPC, not Arc)');
     console.log('- No internet or the RPC endpoint is down');
     console.log('- The name was registered on mainnet instead of Sepolia');
     process.exit(1);

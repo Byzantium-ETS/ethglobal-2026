@@ -43,7 +43,7 @@ npm run smoke:world
 - real AgentKit payload parsing, freshness validation, and EIP-191 signature verification
 - server free-trial decrement through the real `worldMiddleware`
 
-The only mocked piece in `smoke:world` is AgentBook lookup. Tasks 2C.2 and 2C.3 are still teammate-owned, so local CI maps the verified signer address to `human-smoke` without replacing the SDK trust implementation.
+The only mocked piece in `smoke:world` is AgentBook lookup. Local CI maps the verified signer address to `human-smoke` while keeping real AgentKit payload parsing and signature verification in place.
 
 GitHub Actions runs both checks in [`.github/workflows/phase-3-smoke.yml`](../.github/workflows/phase-3-smoke.yml) by installing Foundry, starting Anvil, building the workspaces, and executing the scripts.
 
@@ -57,7 +57,7 @@ RUN_LIVE_ENS_SMOKE=true npm run smoke:ens
 
 Required env:
 
-- `RPC_URL`: Sepolia or Holesky RPC URL
+- `ENS_RPC_URL`: Sepolia or Holesky RPC URL
 - `DEMO_PRIVATE_KEY`: parent-owner key for the testnet ENS parent
 - `ENS_PARENT`: parent name, for example `agentgate.eth`
 
@@ -113,4 +113,4 @@ The demo entrypoint is:
 npm --workspace agentgate-demo run start
 ```
 
-It performs provider setup probing, optional ENS discovery, optional free calls with a supplied `DEMO_AGENTKIT_HEADER`, and an optional paid call with `RUN_DEMO_PAID_CALL=true`. Until 2C.2 and 2C.3 land, generate the real AgentKit header outside the SDK trust module or use `npm run smoke:world` for the deterministic trust path.
+It performs provider setup probing, optional ENS discovery, free calls through SDK `fetchWithWorldTrust(...)` (AgentKit client flow), and an optional paid call with `RUN_DEMO_PAID_CALL=true`.

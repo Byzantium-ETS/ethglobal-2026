@@ -99,7 +99,7 @@ Use these as source-of-truth when implementing integrations:
 - **SDK module boundaries are semantic, not utility-based:** keep new logic in `identity`, `payments`, or `trust` according to Arc/ENS/World ownership, and re-export via `packages/sdk/src/index.ts`.
 - **x402 HTTP contract is already implied in server middleware:** protected endpoints treat missing payment auth as HTTP 402 and accept `Authorization` or `X-402-Authorization` headers.
 - **ENS metadata keys are part of the product contract:** preserve the naming scheme used in docs (`io.agentgate.capabilities`, `io.agentgate.x402-endpoint`, `io.agentgate.x402-price`, `io.agentgate.world-verified`) when implementing identity writes/reads.
-- **Environment setup follows `.env.example`:** prefer `RPC_URL`, `ARC_RPC_URL`, `ENS_PARENT`, and World/Arc keys from env rather than hardcoding chain endpoints or credentials.
+- **Environment setup follows `.env.example`:** prefer `ENS_RPC_URL`, `ARC_RPC_URL`, `ENS_PARENT`, and World/Arc keys from env rather than hardcoding chain endpoints or credentials.
 - **Onchain integration checks are manual:** use `.github/workflows/onchain-integration.yml` and `docs/ONCHAIN_INTEGRATION.md` for funded-wallet checks. Do not put private-key secrets in default PR CI.
 
 ## Required development workflow
