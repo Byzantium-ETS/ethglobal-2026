@@ -85,7 +85,7 @@ describe('trust.verifyAgentWalletRegistration', () => {
   });
 
   it('returns true for a wallet that is present in AgentBook', async () => {
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
     mocks.isAddress.mockReturnValue(true);
     const lookupHuman = vi.fn().mockResolvedValue('0xabc123');
     mocks.createAgentBookVerifier.mockReturnValue({ lookupHuman });
@@ -102,7 +102,7 @@ describe('trust.verifyAgentWalletRegistration', () => {
   });
 
   it('returns false when wallet is not present in AgentBook', async () => {
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
     mocks.isAddress.mockReturnValue(true);
     const lookupHuman = vi.fn().mockResolvedValue(null);
     mocks.createAgentBookVerifier.mockReturnValue({ lookupHuman });
@@ -131,7 +131,7 @@ describe('trust.requestWorldProof', () => {
   });
 
   it('returns a signed agentkit header with the default statement when none is provided', async () => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => { });
     const signMessage = vi.fn().mockResolvedValue('0xsigned');
     const createHeader = vi.fn().mockResolvedValue('encoded-header');
     mocks.privateKeyToAccount.mockReturnValue({
@@ -166,7 +166,7 @@ describe('trust.requestWorldProof', () => {
   });
 
   it('includes a custom statement when provided', async () => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => { });
     const createHeader = vi.fn().mockResolvedValue('encoded-header');
     mocks.privateKeyToAccount.mockReturnValue({
       address: '0x1111111111111111111111111111111111111111',
@@ -181,8 +181,8 @@ describe('trust.requestWorldProof', () => {
   });
 
   it('returns success false when proof generation fails', async () => {
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => { });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const createHeader = vi.fn().mockRejectedValue(new Error('header failed'));
     mocks.privateKeyToAccount.mockReturnValue({
       address: '0x1111111111111111111111111111111111111111',

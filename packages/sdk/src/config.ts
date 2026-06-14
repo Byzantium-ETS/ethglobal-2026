@@ -16,6 +16,7 @@ const REQUIRED_ENV_VARS = [
   'ARC_API_KEY',
   'ARC_RPC_URL',
   'WORLD_API_KEY',
+  'WORLD_RPC_URL',
   'ENS_PARENT',
 ] as const;
 
@@ -62,11 +63,10 @@ function getValidatedEnv(): Record<EnvVarName, string> {
 export const config = {
   get rpc() {
     const env = getValidatedEnv();
-    const worldRpc = process.env.WORLD_RPC_URL?.trim();
     return {
       standard: env.RPC_URL,
       arc: env.ARC_RPC_URL,
-      world: worldRpc && worldRpc.length > 0 ? worldRpc : undefined,
+      world: env.WORLD_RPC_URL,
     };
   },
   get keys() {
