@@ -1,10 +1,31 @@
-import { spawn } from 'child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
+
+function stopProcess(child: ChildProcess | undefined): void {
+  if (child && !child.killed) {
+    child.kill('SIGTERM');
+  }
+}
 
 async function main() {
   console.log('[run-demo] Starting server...');
   const server = spawn('npm', ['--workspace', '@agentgate/server', 'run', 'start'], {
     stdio: 'inherit',
     shell: true,
+  });
+  let demo: ChildProcess | undefined;
+
+  const cleanup = () => {
+    stopProcess(demo);
+    stopProcess(server);
+  };
+
+  process.once('SIGINT', () => {
+    cleanup();
+    process.exit(130);
+  });
+  process.once('SIGTERM', () => {
+    cleanup();
+    process.exit(143);
   });
 
   // Poll until server is up
@@ -16,8 +37,8 @@ async function main() {
         up = true;
         break;
       }
-    } catch (e) {
-      // ignore
+    } catch {
+      // Server is still starting.
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
@@ -29,14 +50,14 @@ async function main() {
   }
 
   console.log('[run-demo] Server is up. Running demo...');
-  const demo = spawn('npm', ['--workspace', 'agentgate-demo', 'run', 'start'], {
+  demo = spawn('npm', ['--workspace', 'agentgate-demo', 'run', 'start'], {
     stdio: 'inherit',
     shell: true,
   });
 
   demo.on('close', (code) => {
     console.log(`[run-demo] Demo finished with code ${code}`);
-    server.kill('SIGTERM');
+    stopProcess(server);
     // Ensure Node process exits
     setTimeout(() => process.exit(code ?? 0), 100);
   });

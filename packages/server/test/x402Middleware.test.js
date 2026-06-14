@@ -36,12 +36,12 @@ function loadModule(state) {
         },
       },
       '@circle-fin/x402-batching/server': {
-        BatchFacilitatorClient: class FakeBatchFacilitatorClient {
-          constructor(options) {
-            state.facilitatorOptions = options;
-          }
+        BatchFacilitatorClient: function FakeBatchFacilitatorClient(options) {
+          state.facilitatorOptions = options;
         },
-        GatewayEvmScheme: class FakeGatewayEvmScheme {},
+        GatewayEvmScheme: function FakeGatewayEvmScheme() {
+          return { scheme: 'exact' };
+        },
       },
     },
     [x402ModulePath, sellerConfigPath],
@@ -84,6 +84,7 @@ test('x402Middleware attaches payment metadata from the signature header', async
   process.env.SELLER_ADDRESS = '0x1111111111111111111111111111111111111111';
   process.env.CALL_PRICE = '2500';
   process.env.CIRCLE_API_KEY = 'circle-secret';
+  delete process.env.CIRCLE_API_URL;
 
   const state = {
     innerBehavior: 'success',
@@ -116,13 +117,40 @@ test('x402Middleware attaches payment metadata from the signature header', async
     settle: { Authorization: 'Bearer circle-secret' },
     supported: { Authorization: 'Bearer circle-secret' },
   });
+  assert.equal(state.facilitatorOptions.url, 'https://gateway-api-testnet.circle.com');
   assert.equal(state.paymentMiddlewareConfig['/call'].accepts.price.amount, '2500');
+});
+
+test('x402Middleware uses the configured Circle Gateway URL when provided', async () => {
+  process.env.NODE_ENV = 'test';
+  process.env.SELLER_ADDRESS = '0x1111111111111111111111111111111111111111';
+  process.env.CIRCLE_API_URL = 'https://gateway-api.custom.example/';
+
+  const state = {
+    innerBehavior: 'success',
+    innerCalls: 0,
+    facilitatorClients: null,
+    facilitatorOptions: null,
+    registerArgs: null,
+    paymentMiddlewareConfig: null,
+    resourceServer: null,
+  };
+
+  const x402Module = loadModule(state);
+  const req = makeReq({ 'payment-signature': 'sig-123' });
+  const recorder = makeRecorder();
+
+  await x402Module.x402Middleware(req, {}, recorder.next);
+
+  assert.deepEqual(recorder.calls, [undefined]);
+  assert.equal(state.facilitatorOptions.url, 'https://gateway-api.custom.example');
 });
 
 test('x402Middleware returns a 402 challenge when payment headers are missing', async () => {
   process.env.NODE_ENV = 'test';
   process.env.SELLER_ADDRESS = '0x1111111111111111111111111111111111111111';
   process.env.CALL_PRICE = '2500';
+  delete process.env.CIRCLE_API_URL;
 
   const state = {
     innerBehavior: 'success',
@@ -152,6 +180,7 @@ test('x402Middleware returns a 402 challenge when payment headers are missing', 
 test('x402Middleware forwards errors without attaching payment metadata', async () => {
   process.env.NODE_ENV = 'test';
   process.env.SELLER_ADDRESS = '0x1111111111111111111111111111111111111111';
+  delete process.env.CIRCLE_API_URL;
 
   const state = {
     innerBehavior: 'error',
