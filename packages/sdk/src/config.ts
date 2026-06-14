@@ -16,6 +16,7 @@ const REQUIRED_ENV_VARS = [
   'ARC_API_KEY',
   'ARC_RPC_URL',
   'WORLD_API_KEY',
+  'WORLD_RPC_URL',
   'ENS_PARENT',
 ] as const;
 
@@ -65,6 +66,7 @@ export const config = {
     return {
       standard: env.RPC_URL,
       arc: env.ARC_RPC_URL,
+      world: env.WORLD_RPC_URL,
     };
   },
   get keys() {
