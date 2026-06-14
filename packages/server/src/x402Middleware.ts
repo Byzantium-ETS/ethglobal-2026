@@ -16,12 +16,19 @@ declare global {
   }
 }
 
+const DEFAULT_CIRCLE_GATEWAY_API_URL = 'https://gateway-api-testnet.circle.com';
+
+function getCircleGatewayApiUrl(): string {
+  return (process.env.CIRCLE_API_URL?.trim() || DEFAULT_CIRCLE_GATEWAY_API_URL).replace(/\/+$/, '');
+}
+
 function buildResourceServer(): x402ResourceServer {
   const apiHeader: Record<string, string> = process.env.CIRCLE_API_KEY
     ? { Authorization: `Bearer ${process.env.CIRCLE_API_KEY}` }
     : {};
 
   const facilitatorClient = new BatchFacilitatorClient({
+    url: getCircleGatewayApiUrl(),
     createAuthHeaders: async () => ({
       verify: apiHeader,
       settle: apiHeader,
@@ -82,5 +89,5 @@ export const x402Middleware: RequestHandler = (req: Request, res: Response, next
     return next(err);
   };
 
-  return _inner(req, res, patchedNext);
+  _inner(req, res, patchedNext);
 };

@@ -77,14 +77,20 @@ export const config = {
     }
     return {
       privateKey: pk,
-      arcApi: env.ARC_API_KEY,
-      worldApi: env.WORLD_API_KEY,
     };
   },
   get ens() {
     const env = getValidatedEnv();
     return {
       parent: env.ENS_PARENT,
+    };
+  },
+  get api() {
+    const env = getValidatedEnv();
+    return {
+      arc: env.ARC_API_KEY,
+      world: env.WORLD_API_KEY,
+      circle: process.env.CIRCLE_API_URL,
     };
   },
 };
