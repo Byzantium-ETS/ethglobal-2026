@@ -105,7 +105,7 @@ npm run check:secrets
 
 `check:secrets` scans tracked files for committed `.env` files, private-key-looking hex values, private key block markers, and non-placeholder secret assignments. Known public test keys used by Anvil/Hardhat fixtures are allowed.
 
-## Demo Runner
+## Visual Demo Runner
 
 The demo entrypoint is:
 
@@ -113,6 +113,14 @@ The demo entrypoint is:
 npm --workspace agentgate-demo run start
 ```
 
-It performs provider setup probing, optional ENS discovery, optional free calls with SDK-generated AgentKit headers, and an optional paid call with `RUN_DEMO_PAID_CALL=true`.
+Open `http://127.0.0.1:5173` after the command starts. The page presents a ticketing flow for `AgentGate Live 2026`: ENS provider discovery/metadata, World AgentKit proof status, a max-two-ticket anti-scalper rule for human-backed wallets, Gateway balance, provider 402 challenge status, and optional free/paid provider calls.
+
+It performs provider setup probing, optional ENS discovery, optional free calls with SDK-generated AgentKit headers, and an optional paid call with `RUN_DEMO_PAID_CALL=true`. Private keys stay inside the local Node process and are never sent to the browser.
 
 Set `RUN_DEMO_FREE_CALLS=true` to have the demo call `requestWorldProof()` and send the returned value as the `agentkit` header. `DEMO_AGENTKIT_HEADER` or `AGENTKIT_HEADER` can still override the generated header for debugging.
+
+Live operations stay gated:
+
+- `RUN_LIVE_ENS_SMOKE=true` enables ENS metadata writes.
+- `RUN_DEMO_FREE_CALLS=true` sends a real AgentKit header to the provider.
+- `RUN_DEMO_PAID_CALL=true` spends funded Gateway balance through x402.

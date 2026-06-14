@@ -9,6 +9,13 @@
     "test": "echo \"no tests\" && exit 0"
   },
   "dependencies": {
-    "@agentgate/sdk": "^0.1.0"
+    "@agentgate/sdk": "^0.1.0",
+    "@ensdomains/ensjs": "^3.3.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "viem": "^2.52.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17"
   }
 }

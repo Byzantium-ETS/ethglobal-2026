@@ -128,7 +128,7 @@ For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 paym
     ```
 3.  **Set up environment variables**:
     Create a `.env` file in the root directory and configure necessary keys and endpoints for Arc, ENS, and World (e.g., RPC URLs, private keys for demo wallets).
-4.  **Run the demo**:
+4.  **Run the visual demo**:
     Build the workspaces, start the provider server, then run the demo package:
 
     ```bash
@@ -137,12 +137,12 @@ For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 paym
     npm --workspace agentgate-demo run start
     ```
 
-    By default the demo probes the provider, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
+    Open `http://127.0.0.1:5173` to see the ticketing demo: a primary ticket sale checks ENS provider discovery, World AgentKit human-backed wallet status, a max-two-ticket anti-scalper rule, and Arc x402 payment readiness. By default, live ENS writes and paid x402 calls are skipped. Enable `RUN_LIVE_ENS_SMOKE=true`, `RUN_DEMO_FREE_CALLS=true`, or `RUN_DEMO_PAID_CALL=true` only when the corresponding testnet resources are ready.
 
 <br>
 
 > [!NOTE]
-> The project is currently under active development for ETHGlobal. The `demo` folder will contain concrete scripts and a minimal UI/CLI for an end-to-end demonstration.
+> The visual demo is local-first and keeps private keys server-side in Node. Browser code never receives `.env` secrets.
 
 ## Risks and Mitigations
 
