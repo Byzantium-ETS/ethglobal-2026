@@ -128,7 +128,7 @@ For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 paym
     ```
 3.  **Set up environment variables**:
     Create a `.env` file in the root directory and configure necessary keys and endpoints for Arc, ENS, and World (e.g., RPC URLs, private keys for demo wallets).
-4.  **Run the demo**:
+4.  **Run the demo UI**:
     Build the workspaces, start the provider server, then run the demo package:
 
     ```bash
@@ -137,12 +137,20 @@ For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 paym
     npm --workspace agentgate-demo run start
     ```
 
-    By default the demo probes the provider, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
+    By default the demo serves a browser UI at `http://127.0.0.1:5173`, with a local proxy to the provider endpoint from `AGENTGATE_PROVIDER_URL` or `http://127.0.0.1:3000/call`. Set `DEMO_PORT` to use a different UI port. The proxy can attach `DEMO_AGENTKIT_HEADER`/`AGENTKIT_HEADER` for World free-trial calls, or generate a proof from the SDK when the World/agent wallet env is configured. Paid calls use `BUYER_PRIVATE_KEY` or `DEMO_PRIVATE_KEY` with `ARC_RPC_URL` to run through the x402 payment client; provider Gateway auth uses `CIRCLE_API_KEY` or falls back to `ARC_API_KEY`.
+
+    To run the older CLI smoke runner instead, use:
+
+    ```bash
+    npm --workspace agentgate-demo run start:cli
+    ```
+
+    The CLI probes the provider, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
 
 <br>
 
 > [!NOTE]
-> The project is currently under active development for ETHGlobal. The `demo` folder will contain concrete scripts and a minimal UI/CLI for an end-to-end demonstration.
+> The project is currently under active development for ETHGlobal. The `demo` folder contains a minimal browser UI and CLI smoke runner for the end-to-end demonstration.
 
 ## Risks and Mitigations
 

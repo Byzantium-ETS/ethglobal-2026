@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentGate - Verified AI Agent Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="bg-mark" aria-hidden="true"></div>
+
+  <div id="page-landing" class="page active" data-testid="page-landing">
+    <nav class="landing-nav">
+      <a class="nav-logo" href="/" aria-label="AgentGate home">
+        <span class="nav-logo-icon"><img src="/assets/agentgate-logo.png" alt="" /></span>
+        <span>AgentGate</span>
+      </a>
+      <div class="landing-actions">
+        <button class="btn btn-ghost btn-sm" type="button" data-page="connect">Sign in</button>
+        <button class="btn btn-primary btn-sm" type="button" data-page="connect" data-testid="start-demo">Launch demo</button>
+      </div>
+    </nav>
+
+    <main class="landing-body">
+      <span class="eyebrow"><span class="eyebrow-dot"></span> ETHGlobal 2026 - World, ENS, Arc</span>
+      <h1 class="hero-title">Agent discovery with verifiable <span>metadata, reviews, and safety.</span></h1>
+      <p class="hero-sub">AgentGate is a decentralized trust registry where agents can discover who to call, verify who backs them, inspect what they offer, and pay safely.</p>
+
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-lg" type="button" data-page="connect">Connect and deploy</button>
+        <button class="btn btn-ghost" type="button" data-page="console">View live console</button>
+      </div>
+
+      <div class="flow-strip" aria-label="AgentGate workflow">
+        <div class="flow-strip-item">
+          <span class="flow-strip-circle">1</span>
+          <span>Connect<br />identity</span>
+        </div>
+        <div class="flow-strip-item">
+          <span class="flow-strip-circle">2</span>
+          <span>Register<br />agent</span>
+        </div>
+        <div class="flow-strip-item">
+          <span class="flow-strip-circle">3</span>
+          <span>Publish<br />ENS records</span>
+        </div>
+        <div class="flow-strip-item">
+          <span class="flow-strip-circle">4</span>
+          <span>Call<br />with x402</span>
+        </div>
+      </div>
+
+      <div class="integrations" aria-label="Powered by">
+        <span>Powered by</span>
+        <strong>World AgentKit</strong>
+        <strong>ENS</strong>
+        <strong>Arc x402</strong>
+      </div>
+    </main>
+  </div>
+
+  <div id="page-connect" class="page" data-testid="page-connect">
+    <nav class="nav">
+      <a class="nav-logo" href="/" aria-label="AgentGate home">
+        <span class="nav-logo-icon"><img src="/assets/agentgate-logo.png" alt="" /></span>
+        <span>AgentGate</span>
+      </a>
+      <div class="stepper" aria-label="Progress">
+        <span class="stepper-step active"><span>1</span> Connect</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step"><span>2</span> Register</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step"><span>3</span> Console</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" type="button" data-page="landing">Back</button>
+    </nav>
+
+    <main class="centered-layout">
+      <header class="section-header">
+        <span class="eyebrow"><span class="eyebrow-dot"></span> Step 1 of 3</span>
+        <h2>Connect your identity</h2>
+        <p>Choose the identity surface that backs this agent during the demo.</p>
+      </header>
+
+      <section class="card wallet-card">
+        <div class="wallet-options">
+          <button class="wallet-option selected" type="button" data-wallet="world" data-testid="wallet-option">
+            <span class="wallet-icon">W</span>
+            <span>
+              <strong>World App</strong>
+              <small>Human-backed identity, recommended</small>
+            </span>
+            <span class="wallet-check">OK</span>
+          </button>
+          <button class="wallet-option" type="button" data-wallet="metamask">
+            <span class="wallet-icon">M</span>
+            <span>
+              <strong>MetaMask</strong>
+              <small>Browser wallet signature</small>
+            </span>
+            <span class="wallet-check"></span>
+          </button>
+          <button class="wallet-option" type="button" data-wallet="coinbase">
+            <span class="wallet-icon">C</span>
+            <span>
+              <strong>Coinbase Wallet</strong>
+              <small>Smart wallet profile</small>
+            </span>
+            <span class="wallet-check"></span>
+          </button>
+        </div>
+
+        <div class="world-panel" id="world-panel">
+          <div class="world-orb"><img src="/assets/agentgate-logo.png" alt="" /></div>
+          <div>
+            <strong>World verification ready</strong>
+            <p>For the live demo, paste a real AgentKit header later in the console when the backend is ready.</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full" id="connect-button" data-testid="connect-button" type="button">Continue</button>
+      </section>
+    </main>
+  </div>
+
+  <div id="page-register" class="page" data-testid="page-register">
+    <nav class="nav">
+      <a class="nav-logo" href="/" aria-label="AgentGate home">
+        <span class="nav-logo-icon"><img src="/assets/agentgate-logo.png" alt="" /></span>
+        <span>AgentGate</span>
+      </a>
+      <div class="stepper" aria-label="Progress">
+        <span class="stepper-step done"><span>1</span> Connect</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step active"><span>2</span> Register</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step"><span>3</span> Console</span>
+      </div>
+      <span class="badge badge-live"><span class="dot dot-pulse"></span><span id="identity-status">World verified</span></span>
+    </nav>
+
+    <main class="register-layout">
+      <section class="register-left">
+        <header class="form-header">
+          <span class="eyebrow"><span class="eyebrow-dot"></span> Step 2 of 3</span>
+          <h2>Register your agent</h2>
+          <p>Prepare the ENS profile and x402 endpoint your agent will publish.</p>
+        </header>
+
+        <form class="agent-form" id="agent-form">
+          <label class="field">
+            <span>Agent name</span>
+            <div class="suffix-field">
+              <input id="agent-name" data-testid="agent-name" value="oracle-alpha" autocomplete="off" />
+              <span>.agentgate.eth</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Display name</span>
+            <input id="agent-display" value="Oracle Alpha" autocomplete="off" />
+          </label>
+
+          <label class="field">
+            <span>Description</span>
+            <input id="agent-desc" value="World verified price oracle for autonomous agents." autocomplete="off" />
+          </label>
+
+          <label class="field">
+            <span>Provider endpoint</span>
+            <input id="provider-url" data-testid="provider-url" type="url" value="http://127.0.0.1:3000/call" autocomplete="off" />
+          </label>
+
+          <div class="field">
+            <span>Capabilities</span>
+            <div class="capabilities-grid">
+              <button class="cap-item active" type="button" data-cap="Price feeds">Price feeds<span>OK</span></button>
+              <button class="cap-item active" type="button" data-cap="Risk checks">Risk checks<span>OK</span></button>
+              <button class="cap-item" type="button" data-cap="Swaps">Swaps<span></span></button>
+              <button class="cap-item" type="button" data-cap="NFT data">NFT data<span></span></button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Price</span>
+              <div class="suffix-field">
+                <input id="agent-price" type="number" value="0.001" step="0.001" min="0" />
+                <span>USDC</span>
+              </div>
+            </label>
+            <label class="field">
+              <span>Trial calls</span>
+              <input id="agent-trial" type="number" value="3" min="0" max="20" />
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="register-button" data-testid="register-button" type="button">Publish agent</button>
+            <button class="btn btn-ghost" type="button" data-page="connect">Back</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="register-right">
+        <span class="preview-label">Live preview</span>
+        <div class="agent-preview-card">
+          <div class="agent-avatar"><img src="/assets/agentgate-logo.png" alt="" /></div>
+          <h3 id="preview-display">Oracle Alpha</h3>
+          <code id="preview-ens">oracle-alpha.agentgate.eth</code>
+          <p id="preview-desc">World verified price oracle for autonomous agents.</p>
+          <div id="preview-caps" class="chip-row"></div>
+          <div class="agent-meta">
+            <div><span>x402 price</span><strong id="preview-price">0.001 USDC</strong></div>
+            <div><span>Free trial</span><strong id="preview-trial">3 calls</strong></div>
+            <div><span>Trust</span><strong>World-backed</strong></div>
+            <div><span>Endpoint</span><strong id="preview-endpoint">/call</strong></div>
+          </div>
+        </div>
+
+        <div class="records-card">
+          <span class="preview-label">ENS text records</span>
+          <pre id="records-preview"></pre>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="page-console" class="page" data-testid="page-console">
+    <nav class="nav">
+      <a class="nav-logo" href="/" aria-label="AgentGate home">
+        <span class="nav-logo-icon"><img src="/assets/agentgate-logo.png" alt="" /></span>
+        <span>AgentGate</span>
+      </a>
+      <div class="stepper" aria-label="Progress">
+        <span class="stepper-step done"><span>1</span> Connect</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step done"><span>2</span> Register</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-step active"><span>3</span> Console</span>
+      </div>
+      <div class="nav-right">
+        <span class="badge badge-live"><span class="dot dot-pulse"></span><span id="provider-pill">Provider unknown</span></span>
+        <button class="btn btn-ghost btn-sm" id="health-button" type="button">Check provider</button>
+      </div>
+    </nav>
+
+    <main class="console-layout">
+      <aside class="console-left">
+        <section class="agent-card-mini">
+          <div class="agent-avatar-sm"><img src="/assets/agentgate-logo.png" alt="" /></div>
+          <h2 id="console-name">Oracle Alpha</h2>
+          <code id="console-ens">oracle-alpha.agentgate.eth</code>
+          <p><span class="dot dot-pulse"></span> Online in demo mode</p>
+          <div class="mini-stats">
+            <div><strong id="stat-calls">0</strong><span>Calls</span></div>
+            <div><strong id="stat-spent">0.000</strong><span>USDC</span></div>
+          </div>
+        </section>
+
+        <section class="side-section">
+          <span class="side-title">Free trial</span>
+          <div class="trial-row"><span id="trial-count">3 calls left</span><strong id="trial-mode">World</strong></div>
+          <div class="trial-track"><span id="trial-bar"></span></div>
+        </section>
+
+        <section class="side-section">
+          <span class="side-title">Capabilities</span>
+          <div class="chip-row" id="console-caps"></div>
+        </section>
+
+        <section class="side-section">
+          <span class="side-title">Discovered agents</span>
+          <button class="known-agent" type="button">oracle-alpha<small>0.001 USDC</small></button>
+          <button class="known-agent" type="button">chain-indexer<small>free trial</small></button>
+          <button class="known-agent" type="button">risk-engine<small>0.002 USDC</small></button>
+        </section>
+      </aside>
+
+      <section class="console-center">
+        <header class="chat-header">
+          <div>
+            <span class="eyebrow"><span class="eyebrow-dot"></span> Agent console</span>
+            <h2>Call verified agents</h2>
+          </div>
+          <span class="status-chip" id="call-state">Ready</span>
+        </header>
+
+        <div class="suggested-row" aria-label="Suggested prompts">
+          <button class="suggest-chip" type="button">Find a price oracle agent</button>
+          <button class="suggest-chip" type="button">Run a free trial call</button>
+          <button class="suggest-chip" type="button">Show the x402 challenge</button>
+        </div>
+
+        <div class="chat-window" id="chat-window" aria-live="polite"></div>
+
+        <div class="composer">
+          <label class="sr-only" for="prompt-input">Prompt</label>
+          <textarea id="prompt-input" rows="2" placeholder="Ask your agent to discover, verify, or call another agent...">Run a free trial call to the provider.</textarea>
+          <button class="btn btn-primary" id="call-button" data-testid="call-button" type="button">Send</button>
+        </div>
+      </section>
+
+      <aside class="console-right">
+        <section class="activity-panel">
+          <span class="side-title">Activity</span>
+          <div id="activity-feed" class="activity-feed"></div>
+        </section>
+
+        <section class="network-panel">
+          <span class="side-title">Network</span>
+          <svg viewBox="0 0 260 170" role="img" aria-label="Agent network graph">
+            <circle cx="130" cy="84" r="72" fill="none" stroke="rgba(11,114,208,.12)" />
+            <circle cx="130" cy="84" r="48" fill="none" stroke="rgba(11,114,208,.18)" />
+            <line x1="130" y1="84" x2="52" y2="42" />
+            <line x1="130" y1="84" x2="208" y2="44" />
+            <line x1="130" y1="84" x2="204" y2="126" />
+            <line x1="130" y1="84" x2="62" y2="132" />
+            <circle cx="130" cy="84" r="16" class="node-main" />
+            <circle cx="52" cy="42" r="9" class="node" />
+            <circle cx="208" cy="44" r="9" class="node" />
+            <circle cx="204" cy="126" r="9" class="node" />
+            <circle cx="62" cy="132" r="9" class="node" />
+          </svg>
+        </section>
+
+        <section class="json-card">
+          <div class="json-card-header">
+            <span>Last response</span>
+            <button class="copy-button" id="copy-json" type="button">Copy</button>
+          </div>
+          <pre id="response-json">{}</pre>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="deploy-overlay" class="deploy-overlay" aria-hidden="true">
+    <div class="deploy-modal">
+      <div class="world-orb"><img src="/assets/agentgate-logo.png" alt="" /></div>
+      <h2>Publishing agent</h2>
+      <div class="deploy-steps">
+        <span class="deploy-step active" data-step="0">Reserve ENS subname</span>
+        <span class="deploy-step" data-step="1">Write AgentGate records</span>
+        <span class="deploy-step" data-step="2">Link x402 endpoint</span>
+        <span class="deploy-step" data-step="3">Open console</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
