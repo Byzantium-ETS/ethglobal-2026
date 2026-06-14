@@ -1,0 +1,56 @@
+name: Phase 3 Smoke
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-anvil-smoke:
+    name: Local Anvil smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      ANVIL_RPC_URL: http://127.0.0.1:8545
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Start Anvil
+        run: |
+          anvil --host 127.0.0.1 --port 8545 > anvil.log 2>&1 &
+          for attempt in {1..30}; do
+            if cast chain-id --rpc-url "$ANVIL_RPC_URL" >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat anvil.log
+          exit 1
+
+      - name: Deterministic server and SDK smoke
+        run: npm run smoke:anvil
+
+      - name: World AgentKit trust smoke
+        run: npm run smoke:world
