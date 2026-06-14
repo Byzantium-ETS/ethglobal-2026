@@ -14,9 +14,6 @@ const testValues = vi.hoisted(() => ({
 vi.mock('@worldcoin/agentkit', () => ({
   createAgentkitClient: mocks.createAgentkitClient,
   createAgentBookVerifier: mocks.createAgentBookVerifier,
-}));
-
-vi.mock('@worldcoin/agentkit-core', () => ({
   buildAgentkitSchema: mocks.buildAgentkitSchema,
 }));
 

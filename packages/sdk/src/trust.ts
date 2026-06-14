@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { AgentkitClient, createAgentkitClient, createAgentBookVerifier } from '@worldcoin/agentkit';
-import { buildAgentkitSchema } from '@worldcoin/agentkit-core';
+import { AgentkitClient, buildAgentkitSchema, createAgentkitClient, createAgentBookVerifier } from '@worldcoin/agentkit';
 import { isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { config } from './config';
