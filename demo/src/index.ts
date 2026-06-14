@@ -1,4 +1,4 @@
-import { discoverAgents, PaymentsClient, type AgentMetadata } from '@agentgate/sdk';
+import { discoverAgents, PaymentsClient, requestWorldProof, type AgentMetadata } from '@agentgate/sdk';
 
 type JsonResponse<T = unknown> = {
 	status: number;
@@ -57,20 +57,27 @@ async function discoverProvider(providerUrl: string): Promise<AgentMetadata> {
 }
 
 async function runFreeCalls(callUrl: string): Promise<void> {
-	const agentkitHeader = env('DEMO_AGENTKIT_HEADER') ?? env('AGENTKIT_HEADER');
+	const configuredHeader = env('DEMO_AGENTKIT_HEADER') ?? env('AGENTKIT_HEADER');
+	const shouldRunFreeCalls = configuredHeader || env('RUN_DEMO_FREE_CALLS') === 'true';
 	const attempts = Number(env('DEMO_FREE_CALLS') ?? '2');
+	const statement = env('DEMO_AGENTKIT_STATEMENT') ?? 'AgentGate demo free call';
 
-	if (!agentkitHeader) {
-		console.log('[demo] free calls skipped: provide DEMO_AGENTKIT_HEADER from the real AgentKit client once 2C.2/2C.3 land');
+	if (!shouldRunFreeCalls) {
+		console.log('[demo] free calls skipped: set RUN_DEMO_FREE_CALLS=true to generate AgentKit headers with the SDK');
 		return;
 	}
 
 	for (let attempt = 1; attempt <= attempts; attempt += 1) {
+		const proof = configuredHeader ? { success: true, proof: configuredHeader } : await requestWorldProof(callUrl, statement);
+		if (!proof.success || !proof.proof) {
+			throw new Error('[demo] failed to generate AgentKit header for free call');
+		}
+
 		const response = await readJson(await fetch(callUrl, {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				agentkit: agentkitHeader,
+				agentkit: proof.proof,
 			},
 			body: JSON.stringify({ prompt: `free demo call ${attempt}` }),
 		}));
