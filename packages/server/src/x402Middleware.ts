@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { BatchFacilitatorClient, GatewayEvmScheme } from '@circle-fin/x402-batching/server';
-import { sellerConfig } from './sellerConfig';
+import { buildPaymentChallenge, sellerConfig } from './sellerConfig';
 
 // Augment Express Request to carry payment metadata for the handler
 declare global {
@@ -64,11 +64,18 @@ const _inner = paymentMiddleware(
  * Settlement occurs after the handler writes its response.
  */
 export const x402Middleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+  const paymentToken = req.header('payment-signature') || req.header('x-payment');
+
+  if (!paymentToken) {
+    res.status(402).json(buildPaymentChallenge(req.originalUrl || req.path || '/call'));
+    return;
+  }
+
   const patchedNext: NextFunction = (err?: any) => {
     if (!err) {
       req.paymentMetadata = {
         scheme: 'exact',
-        token: req.header('payment-signature') || req.header('x-payment') || '',
+        token: paymentToken,
         network: sellerConfig.network,
       };
     }
