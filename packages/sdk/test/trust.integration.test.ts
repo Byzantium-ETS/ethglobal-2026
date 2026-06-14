@@ -10,10 +10,11 @@ beforeAll(async () => {
   process.env.RPC_URL = process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com';
   process.env.DEMO_PRIVATE_KEY =
     process.env.DEMO_PRIVATE_KEY ||
-    '0x59c6995e998f97a5a0044966f09453825f7f4f0f6eb1d3f8d0c96f2de0a6f3b4';
+    `0x${'59c6995e'.repeat(8)}`;
   process.env.ARC_API_KEY = process.env.ARC_API_KEY || 'dummy';
   process.env.ARC_RPC_URL = process.env.ARC_RPC_URL || 'https://rpc.testnet.arc.network';
   process.env.WORLD_API_KEY = process.env.WORLD_API_KEY || 'dummy';
+  process.env.WORLD_RPC_URL = process.env.WORLD_RPC_URL || 'https://worldchain-sepolia.g.alchemy.com/public';
   process.env.ENS_PARENT = process.env.ENS_PARENT || 'agentgate.eth';
   process.env.ENS_CHAIN = process.env.ENS_CHAIN || 'sepolia';
 

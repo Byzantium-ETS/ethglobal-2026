@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   privateKeyToAccount: vi.fn(),
   isAddress: vi.fn(),
 }));
+const testValues = vi.hoisted(() => ({
+  privateKey: `0x${'12345678'.repeat(8)}`,
+}));
 
 vi.mock('@worldcoin/agentkit', () => ({
   createAgentkitClient: mocks.createAgentkitClient,
@@ -31,7 +34,7 @@ vi.mock('../src/config', () => ({
       world: 'https://world-rpc.example',
     },
     keys: {
-      privateKey: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+      privateKey: testValues.privateKey,
     },
   },
 }));
@@ -59,9 +62,7 @@ describe('trust.createAgentWallet', () => {
     const result = await createAgentWallet();
 
     expect(result).toBe(client);
-    expect(mocks.privateKeyToAccount).toHaveBeenCalledWith(
-      '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    );
+    expect(mocks.privateKeyToAccount).toHaveBeenCalledWith(testValues.privateKey);
     expect(mocks.createAgentkitClient).toHaveBeenCalledWith(
       expect.objectContaining({
         signer: expect.objectContaining({
