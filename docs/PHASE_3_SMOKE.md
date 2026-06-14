@@ -13,7 +13,7 @@ The checks below keep local CI deterministic while still providing explicit live
 The current provider server reads these headers:
 
 | Concern | Header | Source |
-|---|---|---|
+| --- | --- | --- |
 | World trust | `agentkit` | `@worldcoin/agentkit` `createAgentkitClient().createHeader(...)` |
 | x402 payment | `payment-signature` | `@x402/fetch` / Circle Gateway x402 client flow |
 | x402 payment fallback | `x-payment` | Alternate x402 payment header accepted by the middleware |
