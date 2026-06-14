@@ -22,6 +22,9 @@ Run commands from the repository root unless noted.
 
 ### Test
 - Repo-wide: `npm run test`
+- Env parity: `npm run check:env`
+- Secret scan: `npm run check:secrets`
+- Local Phase 3 smoke with Anvil running: `npm run smoke:anvil` and `npm run smoke:world`
 - Single package:
   - `npm --workspace @agentgate/sdk run test`
   - `npm --workspace @agentgate/server run test`

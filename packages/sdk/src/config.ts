@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import * as path from 'path';
+import * as path from 'node:path';
 
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -7,7 +7,7 @@ import { mainnet, sepolia } from 'viem/chains';
 import { createEnsPublicClient, createEnsWalletClient } from '@ensdomains/ensjs';
 
 // Load environment variables from the root directory
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env'), quiet: true });
 
 // Define the exact keys from your .env.example
 const REQUIRED_ENV_VARS = [
@@ -49,9 +49,12 @@ function validateEnv(): Record<EnvVarName, string> {
 let validatedEnv: Record<EnvVarName, string> | null = null;
 
 function getValidatedEnv(): Record<EnvVarName, string> {
-  if (!validatedEnv) {
-    validatedEnv = validateEnv();
+  if (validatedEnv === null) {
+    const nextEnv = validateEnv();
+    validatedEnv = nextEnv;
+    return nextEnv;
   }
+
   return validatedEnv;
 }
 
