@@ -43,7 +43,7 @@ npm run smoke:world
 - real AgentKit payload parsing, freshness validation, and EIP-191 signature verification
 - server free-trial decrement through the real `worldMiddleware`
 
-The only mocked piece in `smoke:world` is AgentBook lookup. Local CI maps the verified signer address to `human-smoke` so the trust path stays deterministic; live AgentBook status is covered by the SDK trust integration checks.
+The only mocked piece in `smoke:world` is AgentBook lookup. Local CI maps the verified signer address to `human-smoke` while keeping real AgentKit payload parsing and signature verification in place.
 
 GitHub Actions runs both checks in [`.github/workflows/phase-3-smoke.yml`](../.github/workflows/phase-3-smoke.yml) by installing Foundry, starting Anvil, building the workspaces, and executing the scripts.
 
@@ -57,7 +57,7 @@ RUN_LIVE_ENS_SMOKE=true npm run smoke:ens
 
 Required env:
 
-- `RPC_URL`: Sepolia or Holesky RPC URL
+- `ENS_RPC_URL`: Sepolia or Holesky RPC URL
 - `DEMO_PRIVATE_KEY`: parent-owner key for the testnet ENS parent
 - `ENS_PARENT`: parent name, for example `agentgate.eth`
 
@@ -113,6 +113,4 @@ The demo entrypoint is:
 npm --workspace agentgate-demo run start
 ```
 
-It performs provider setup probing, optional ENS discovery, optional free calls with SDK-generated AgentKit headers, and an optional paid call with `RUN_DEMO_PAID_CALL=true`.
-
-Set `RUN_DEMO_FREE_CALLS=true` to have the demo call `requestWorldProof()` and send the returned value as the `agentkit` header. `DEMO_AGENTKIT_HEADER` or `AGENTKIT_HEADER` can still override the generated header for debugging.
+It performs provider setup probing, optional ENS discovery, free calls through SDK `fetchWithWorldTrust(...)` (AgentKit client flow), and an optional paid call with `RUN_DEMO_PAID_CALL=true`.

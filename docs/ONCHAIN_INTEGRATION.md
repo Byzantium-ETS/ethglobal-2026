@@ -10,7 +10,7 @@ The onchain workflow can use funded wallets and may send a real USDC Gateway dep
 
 Configure these repository secrets before running the workflow:
 
-- `RPC_URL`
+- `ENS_RPC_URL`
 - `ARC_RPC_URL`
 - `ARC_API_KEY`
 - `WORLD_API_KEY`

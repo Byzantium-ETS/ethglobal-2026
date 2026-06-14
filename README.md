@@ -107,7 +107,7 @@ To get started with AgentGate, follow these general steps. More detailed instruc
 
 For hackathon submission rules, AI-use disclosure, demo video requirements, partner-prize preparation, and judging checklists, see [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md).
 
-For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 payment headers, and the deterministic local trust boundary, see [`docs/PHASE_3_SMOKE.md`](docs/PHASE_3_SMOKE.md).
+For Phase 3 smoke checks, live ENS/x402 scripts, and current AgentKit trust-path coverage, see [`docs/PHASE_3_SMOKE.md`](docs/PHASE_3_SMOKE.md).
 
 ### Prerequisites
 
@@ -137,7 +137,7 @@ For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 paym
     npm --workspace agentgate-demo run start
     ```
 
-    By default the demo probes the provider, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
+    By default the demo probes the provider, performs trust-aware free calls through AgentKit, performs ENS discovery only when `RUN_DEMO_DISCOVERY=true`, and performs the paid call only when `RUN_DEMO_PAID_CALL=true` with a funded buyer key.
 
 <br>
 

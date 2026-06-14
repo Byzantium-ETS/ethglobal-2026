@@ -6,7 +6,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 // Provide default env for non-network unit tests so they run in CI and provide coverage.
 // Real integration tests can override with actual values.
 beforeAll(() => {
-  process.env.RPC_URL = process.env.RPC_URL || 'https://ethereum-sepolia.publicnode.com';
+  process.env.ENS_RPC_URL = process.env.ENS_RPC_URL || 'https://ethereum-sepolia.publicnode.com';
   process.env.DEMO_PRIVATE_KEY = process.env.DEMO_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000001';
   process.env.ENS_PARENT = process.env.ENS_PARENT || 'agentgate.eth';
   process.env.ENS_CHAIN = process.env.ENS_CHAIN || 'sepolia';
@@ -16,8 +16,8 @@ beforeAll(() => {
   process.env.WORLD_API_KEY = process.env.WORLD_API_KEY || 'dummy';
 });
 
-describe('ENS Provider (viem/ethers + ensjs clients wired to RPC_URL)', () => {
-  it('should create the provider clients wired to the configured RPC_URL', () => {
+describe('ENS Provider (viem/ethers + ensjs clients wired to ENS_RPC_URL)', () => {
+  it('should create the provider clients wired to the configured ENS_RPC_URL', () => {
     const clients = getEnsClients();
 
     expect(clients).toBeDefined();

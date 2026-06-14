@@ -8,10 +8,11 @@ import { config } from './config';
  * Task 2C.1: AgentKit Package Setup
  * Creates the global AgentKit client instance.
  */
-export async function createAgentWallet(): Promise<AgentkitClient> {
+export async function createAgentWallet(fetchImpl?: typeof fetch): Promise<AgentkitClient> {
   const account = privateKeyToAccount(config.keys.privateKey as `0x${string}`);
 
   return createAgentkitClient({
+    ...(fetchImpl ? { fetch: fetchImpl } : {}),
     signer: {
       address: account.address,
       chainId: 'eip155:8453',
@@ -49,6 +50,7 @@ export async function verifyAgentWalletRegistration(address: string): Promise<bo
 /**
  * Task 2C.3: Verification Proof Request
  * Returns a structured proof object that the server can validate.
+ * Fallback for custom HTTP clients; default integrations should prefer fetchWithWorldTrust().
  */
 export async function requestWorldProof(
   endpoint: string,
@@ -90,4 +92,17 @@ export async function requestWorldProof(
     console.error('[AgentKit] Failed to generate World Proof:', error);
     return { success: false };
   }
+}
+
+/**
+ * Uses AgentKit's native fetch flow so callers can reach trust-gated endpoints
+ * without manually creating and attaching an `agentkit` header.
+ */
+export async function fetchWithWorldTrust(
+  input: string | URL,
+  init?: RequestInit,
+  fetchImpl?: typeof fetch,
+): Promise<Response> {
+  const client = await createAgentWallet(fetchImpl);
+  return client.fetch(typeof input === 'string' ? input : input.toString(), init);
 }

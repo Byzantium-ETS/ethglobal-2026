@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { BatchFacilitatorClient, GatewayEvmScheme } from '@circle-fin/x402-batching/server';
+import { config } from '@agentgate/sdk';
 import { buildPaymentChallenge, sellerConfig } from './sellerConfig';
 
 // Augment Express Request to carry payment metadata for the handler
@@ -22,6 +23,7 @@ function buildResourceServer(): x402ResourceServer {
     : {};
 
   const facilitatorClient = new BatchFacilitatorClient({
+    url: config.api.circle,
     createAuthHeaders: async () => ({
       verify: apiHeader,
       settle: apiHeader,

@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 15
 
     env:
-      RPC_URL: ${{ secrets.RPC_URL }}
+      ENS_RPC_URL: ${{ secrets.ENS_RPC_URL }}
       ARC_RPC_URL: ${{ secrets.ARC_RPC_URL }}
       ARC_API_KEY: ${{ secrets.ARC_API_KEY }}
       WORLD_API_KEY: ${{ secrets.WORLD_API_KEY }}
@@ -50,7 +50,7 @@ jobs:
       - name: Check required configuration
         run: |
           missing=0
-          for name in RPC_URL ARC_RPC_URL ARC_API_KEY WORLD_API_KEY ENS_PARENT DEMO_PRIVATE_KEY; do
+          for name in ENS_RPC_URL ARC_RPC_URL ARC_API_KEY WORLD_API_KEY ENS_PARENT DEMO_PRIVATE_KEY; do
             if [[ -z "${!name}" ]]; then
               echo "::error::Missing required Actions secret or variable: ${name}"
               missing=1
