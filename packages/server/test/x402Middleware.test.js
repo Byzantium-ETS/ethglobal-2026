@@ -50,7 +50,24 @@ function loadModule(state) {
 
 function makeReq(headers) {
   return {
+    originalUrl: '/call',
+    path: '/call',
     header: (name) => headers[name.toLowerCase()],
+  };
+}
+
+function makeRes() {
+  return {
+    statusCode: 200,
+    body: undefined,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.body = payload;
+      return this;
+    },
   };
 }
 
@@ -100,6 +117,36 @@ test('x402Middleware attaches payment metadata from the signature header', async
     supported: { Authorization: 'Bearer circle-secret' },
   });
   assert.equal(state.paymentMiddlewareConfig['/call'].accepts.price.amount, '2500');
+});
+
+test('x402Middleware returns a 402 challenge when payment headers are missing', async () => {
+  process.env.NODE_ENV = 'test';
+  process.env.SELLER_ADDRESS = '0x1111111111111111111111111111111111111111';
+  process.env.CALL_PRICE = '2500';
+
+  const state = {
+    innerBehavior: 'success',
+    innerCalls: 0,
+    facilitatorClients: null,
+    facilitatorOptions: null,
+    registerArgs: null,
+    paymentMiddlewareConfig: null,
+    resourceServer: null,
+  };
+
+  const x402Module = loadModule(state);
+  const sellerConfig = require(sellerConfigPath);
+  const req = makeReq({});
+  const res = makeRes();
+  const recorder = makeRecorder();
+
+  await x402Module.x402Middleware(req, res, recorder.next);
+
+  assert.equal(res.statusCode, 402);
+  assert.deepEqual(res.body, sellerConfig.buildPaymentChallenge('/call'));
+  assert.deepEqual(recorder.calls, []);
+  assert.equal(state.innerCalls, 0);
+  assert.equal(req.paymentMetadata, undefined);
 });
 
 test('x402Middleware forwards errors without attaching payment metadata', async () => {
