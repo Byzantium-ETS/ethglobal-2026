@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { parseAgentkitHeader, verifyAgentkitSignature } from '@worldcoin/agentkit';
 
 let createAgentWallet: typeof import('../src/trust').createAgentWallet;
-let registerAgentWallet: typeof import('../src/trust').registerAgentWallet;
+let verifyAgentWalletRegistration: typeof import('../src/trust').verifyAgentWalletRegistration;
 let requestWorldProof: typeof import('../src/trust').requestWorldProof;
 
 beforeAll(async () => {
@@ -18,7 +19,7 @@ beforeAll(async () => {
 
   const trust = await import('../src/trust');
   createAgentWallet = trust.createAgentWallet;
-  registerAgentWallet = trust.registerAgentWallet;
+  verifyAgentWalletRegistration = trust.verifyAgentWalletRegistration;
   requestWorldProof = trust.requestWorldProof;
 });
 
@@ -29,22 +30,29 @@ describe('trust module integration (real dependencies)', () => {
     expect(typeof client).toBe('object');
   });
 
-  it('returns demo-mode successful registration response', async () => {
+  it('returns a registration status based on live AgentBook lookup', async () => {
     const address = '0x1111111111111111111111111111111111111111';
-    const isRegistered = await registerAgentWallet(address);
-    expect(isRegistered).toBe(true);
+    const isRegistered = await verifyAgentWalletRegistration(address);
+    expect(typeof isRegistered).toBe('boolean');
   });
 
-  it('builds a decodable world proof payload', async () => {
+  it('builds a signed and verifiable world proof payload', async () => {
     const result = await requestWorldProof('https://provider.example/call', 'integration-challenge');
 
     expect(result.success).toBe(true);
     expect(result.proof).toBeDefined();
 
-    const decoded = JSON.parse(Buffer.from(result.proof!, 'base64').toString('utf-8'));
-    expect(decoded.proofType).toBe('world-id-agent');
-    expect(decoded.challenge).toBe('integration-challenge');
-    expect(decoded.signature).toBe('0xMockSignatureForHackathon');
-    expect(typeof decoded.timestamp).toBe('number');
+    const payload = parseAgentkitHeader(result.proof!);
+    expect(payload.domain).toBe('provider.example');
+    expect(payload.uri).toBe('https://provider.example/call');
+    expect(payload.statement).toBe('integration-challenge');
+    expect(payload.chainId).toBe('eip155:8453');
+    expect(payload.type).toBe('eip191');
+    expect(typeof payload.nonce).toBe('string');
+    expect(typeof payload.issuedAt).toBe('string');
+
+    const verification = await verifyAgentkitSignature(payload);
+    expect(verification.valid).toBe(true);
+    expect(verification.address).toBe(payload.address);
   });
 });

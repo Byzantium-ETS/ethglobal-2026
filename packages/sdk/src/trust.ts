@@ -1,4 +1,7 @@
-import { AgentkitClient, createAgentkitClient } from '@worldcoin/agentkit';
+import { randomBytes } from 'node:crypto';
+import { AgentkitClient, createAgentkitClient, createAgentBookVerifier } from '@worldcoin/agentkit';
+import { buildAgentkitSchema } from '@worldcoin/agentkit-core';
+import { isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { config } from './config';
 
@@ -24,18 +27,23 @@ export async function createAgentWallet(): Promise<AgentkitClient> {
  * Task 2C.2: Agent Wallet Registration
  * Replaces the stub with the registration logic.
  */
-export async function registerAgentWallet(address: string): Promise<boolean> {
+export async function verifyAgentWalletRegistration(address: string): Promise<boolean> {
+  if (!isAddress(address)) {
+    throw new Error(`[AgentKit] Invalid wallet address: ${address}`);
+  }
+
   console.log(`[AgentKit] Checking AgentBook status for ${address}...`);
 
-  // True verification requires a human World App scan.
-  // We simulate a successful registry lookup here to unblock the demo.
-  const isRegistered = true;
+  const worldRpcUrl = config.rpc.world;
+  const agentBook = createAgentBookVerifier(worldRpcUrl ? { rpcUrl: worldRpcUrl } : undefined);
+  const humanId = await agentBook.lookupHuman(address);
 
-  if (isRegistered) {
-    console.log(`[AgentKit] Wallet ${address} is successfully human-backed.`);
+  if (humanId) {
+    console.log(`[AgentKit] Wallet ${address} is human-backed (humanId: ${humanId}).`);
     return true;
   }
 
+  console.log(`[AgentKit] Wallet ${address} is not registered in AgentBook.`);
   return false;
 }
 
@@ -43,22 +51,42 @@ export async function registerAgentWallet(address: string): Promise<boolean> {
  * Task 2C.3: Verification Proof Request
  * Returns a structured proof object that the server can validate.
  */
-export async function requestWorldProof(endpoint: string, challengeData: string = "hackathon-challenge"): Promise<{ success: boolean; proof?: string }> {
+export async function requestWorldProof(
+  endpoint: string,
+  challengeData: string = 'Verify your agent is backed by a real human',
+): Promise<{ success: boolean; proof?: string }> {
   try {
     console.log(`[AgentKit] Generating proof for endpoint: ${endpoint}`);
 
-    // The structured proof object that the server will validate
-    const proofObject = {
-      proofType: 'world-id-agent',
-      timestamp: Date.now(),
-      challenge: challengeData,
-      signature: '0xMockSignatureForHackathon',
+    const resource = new URL(endpoint).toString();
+    const domain = new URL(resource).hostname;
+    const issuedAt = new Date().toISOString();
+    const expirationTime = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    const extension = {
+      info: {
+        domain,
+        uri: resource,
+        statement: challengeData,
+        version: '1',
+        nonce: randomBytes(16).toString('hex'),
+        issuedAt,
+        expirationTime,
+        resources: [resource],
+      },
+      supportedChains: [
+        {
+          chainId: 'eip155:8453',
+          type: 'eip191' as const,
+        },
+      ],
+      schema: buildAgentkitSchema(),
     };
 
-    // Encode to base64 for the outgoing X-World-Proof header
-    const encodedProof = Buffer.from(JSON.stringify(proofObject)).toString('base64');
+    const client = await createAgentWallet();
+    const proofHeader = await client.createHeader(extension);
 
-    return { success: true, proof: encodedProof };
+    return { success: true, proof: proofHeader };
   } catch (error) {
     console.error('[AgentKit] Failed to generate World Proof:', error);
     return { success: false };
