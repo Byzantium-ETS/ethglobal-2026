@@ -22,9 +22,14 @@ function getCircleGatewayApiUrl(): string {
   return (process.env.CIRCLE_API_URL?.trim() || DEFAULT_CIRCLE_GATEWAY_API_URL).replace(/\/+$/, '');
 }
 
+function getCircleGatewayApiKey(): string | undefined {
+  return process.env.CIRCLE_API_KEY?.trim() || process.env.ARC_API_KEY?.trim() || undefined;
+}
+
 function buildResourceServer(): x402ResourceServer {
-  const apiHeader: Record<string, string> = process.env.CIRCLE_API_KEY
-    ? { Authorization: `Bearer ${process.env.CIRCLE_API_KEY}` }
+  const apiKey = getCircleGatewayApiKey();
+  const apiHeader: Record<string, string> = apiKey
+    ? { Authorization: `Bearer ${apiKey}` }
     : {};
 
   const facilitatorClient = new BatchFacilitatorClient({
