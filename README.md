@@ -107,7 +107,7 @@ To get started with AgentGate, follow these general steps. More detailed instruc
 
 For hackathon submission rules, AI-use disclosure, demo video requirements, partner-prize preparation, and judging checklists, see [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md).
 
-For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 payment headers, and the current trust mock boundary while 2C.2/2C.3 are in progress, see [`docs/PHASE_3_SMOKE.md`](docs/PHASE_3_SMOKE.md).
+For Phase 3 smoke checks, live ENS/x402 scripts, actual `agentkit` and x402 payment headers, and the deterministic local trust boundary, see [`docs/PHASE_3_SMOKE.md`](docs/PHASE_3_SMOKE.md).
 
 ### Prerequisites
 
